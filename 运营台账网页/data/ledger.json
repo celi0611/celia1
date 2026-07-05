@@ -1,0 +1,918 @@
+{
+  "clients": [
+    {
+      "profileUrl": "",
+      "bio": "",
+      "id": "client_aming_xiaocai",
+      "name": "阿明小菜",
+      "type": "new",
+      "startDate": "2026-06-25",
+      "target": 10,
+      "contractMonths": "6",
+      "publisher": "me",
+      "reviewMode": "required",
+      "status": "active",
+      "publishDays": "以月度规划表为准；6.25-7.25 周期",
+      "activity": "6月25日《【官宣入驻】》；6月30日《【场景营销】》；7月1日《【流量热点】》",
+      "attention": "",
+      "notes": "资料来源：【阿明小菜】 小红书月度规划表.xlsx\n账号定位：【阿明小菜】小红书账号定位方案.pdf\n昵称：阿明⼩菜海鲜·上海菜\n账号定位⽅案"
+    },
+    {
+      "profileUrl": "",
+      "bio": "",
+      "id": "client_puyuan_yijing_spa",
+      "name": "璞元壹境·科技抗衰·SPA",
+      "type": "new",
+      "startDate": "2026-07-01",
+      "target": 10,
+      "contractMonths": "3",
+      "publisher": "me",
+      "reviewMode": "optional",
+      "status": "active",
+      "publishDays": "以月度规划表为准；7.1-8.1 周期",
+      "activity": "7月6日《账号入驻 「壹期·壹会」》；7月8日《探店招募 「壹期·壹会」》；7月14日《环境氛围类 「壹方·空间」》",
+      "attention": "",
+      "notes": "资料来源：【璞元壹境·科技抗衰·SPA】7月小红书月度规划表.xlsx\n账号定位：【璞元壹境·科技抗衰·SPA】账号定位方案.pdf\n昵称：POU YE-璞元壹境\n账号定位⽅案"
+    },
+    {
+      "profileUrl": "",
+      "bio": "",
+      "id": "client_xuanjia_jiangxie",
+      "name": "玄家餐桌·酱蟹（韩乐枋）",
+      "type": "old",
+      "startDate": "2026-06-22",
+      "target": 10,
+      "publisher": "me",
+      "reviewMode": "optional",
+      "status": "active",
+      "publishDays": "以月度规划表为准；6.22-7.22 周期",
+      "activity": "",
+      "notes": "资料来源：【玄家餐桌·酱蟹（韩乐枋）】小红书月度规划表.xlsx\n暂无账号定位 PDF，先按老客户月度规划导入。",
+      "contractMonths": "",
+      "attention": ""
+    },
+    {
+      "profileUrl": "",
+      "bio": "",
+      "id": "client_yaju_xiaoguan",
+      "name": "雅居小馆",
+      "type": "old",
+      "startDate": "2026-07-01",
+      "target": 10,
+      "publisher": "me",
+      "reviewMode": "optional",
+      "status": "active",
+      "publishDays": "以月度规划表为准；7.1-8.1 周期",
+      "activity": "",
+      "notes": "资料来源：【雅居小馆】小红书规划+发布日历.xlsx\n暂无账号定位 PDF，先按老客户月度规划导入。",
+      "contractMonths": "",
+      "attention": ""
+    }
+  ],
+  "notes": [
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_aming_xiaocai_01",
+      "clientId": "client_aming_xiaocai",
+      "title": "【官宣入驻】",
+      "type": "图文",
+      "publishDate": "2026-06-25",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "published",
+      "needDesign": "yes",
+      "tags": [
+        "福利活动",
+        "官宣入驻"
+      ],
+      "angle": "周期：第1周\n选题概述：宣布官方入驻，采用“老板请吃霸王餐”的直球福利引导评论。（官宣！阿明小菜正式入驻，老板放话：请大家吃饭！）\n所需素材：1. 主图设计：门店门头/豪华包厢大气实景图\n 2. 副图—包厢环境展示图、菜品的展示图。",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_aming_xiaocai_02",
+      "clientId": "client_aming_xiaocai",
+      "title": "【场景营销】",
+      "type": "图文",
+      "publishDate": "2026-06-30",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "published",
+      "needDesign": "yes",
+      "tags": [
+        "场景营销",
+        "宴请场景"
+      ],
+      "angle": "周期：第2周\n选题概述：聚焦毕业季与升学宴痛点，教用户如何点出一桌让长辈恩师满意的“本帮雅宴”。（谢师宴｜在老上海本帮味道里，敬一杯给青春！🎓）\n所需素材：包厢远距离展示图：10人桌大圆桌布景、高档餐具及仪式感摆盘的远景图。",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_aming_xiaocai_03",
+      "clientId": "client_aming_xiaocai",
+      "title": "【流量热点】",
+      "type": "图文",
+      "publishDate": "2026-07-01",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "published",
+      "needDesign": "yes",
+      "tags": [
+        "菜品品宣",
+        "热点互动"
+      ],
+      "angle": "周期：第2周\n选题概述：集合世界杯热点，发布知名球员身价+菜品价值对应图\n借势热点流量，带动账号整体曝光数据\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_aming_xiaocai_04",
+      "clientId": "client_aming_xiaocai",
+      "title": "【场景营销】",
+      "type": "图文",
+      "publishDate": "2026-07-03",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "published",
+      "needDesign": "yes",
+      "tags": [
+        "场景营销"
+      ],
+      "angle": "周期：第2周\n选题概述：聚焦毕业季的离别与感恩，主打“老上海本帮味道，新邻里温情”。将阿明油爆虾、金牌红烧肉、深海大黄鱼等招牌菜与“红火前程、鱼跃龙门”等毕业祝愿强行绑定，在私密包厢里为师生和家长打造温馨、不拘束、有人情味的告别仪式感。\n所需素材：包厢图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_aming_xiaocai_05",
+      "clientId": "client_aming_xiaocai",
+      "title": "【探店招募】",
+      "type": "图文",
+      "publishDate": "2026-07-07",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "探店招募",
+        "到店活动"
+      ],
+      "angle": "周期：第三周\n选题概述：长期置顶“首席品鉴官招募令”，全城寻找爱吃本帮菜的宝子到店免费吃一整桌。（首席品鉴官招募丨全城寻找爱吃本帮菜的宝子，请你吃一整桌！）【活动名额/套餐待确认】\n所需素材：包厢远景图，详见示例图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_aming_xiaocai_06",
+      "clientId": "client_aming_xiaocai",
+      "title": "【菜品品宣】",
+      "type": "图文",
+      "publishDate": "2026-07-10",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "宴请场景",
+        "菜品品宣"
+      ],
+      "angle": "周期：第三周\n选题概述：呈现阿明小菜的招牌菜图，凸显出品质量。（一箸本帮，一席雅宴｜ 阿明小菜招牌菜图）\n所需素材：招牌菜品特写",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_aming_xiaocai_07",
+      "clientId": "client_aming_xiaocai",
+      "title": "【热梗互动】",
+      "type": "图文",
+      "publishDate": "2026-07-13",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "菜品品宣",
+        "热点互动"
+      ],
+      "angle": "周期：第四周\n选题概述：趣味引流互动选择题：“假如让你担跟你在一起，选三种菜品吃一辈子”。\n所需素材：白底菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_aming_xiaocai_08",
+      "clientId": "client_aming_xiaocai",
+      "title": "【流量热点】",
+      "type": "图文",
+      "publishDate": "2026-07-15",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "热点互动"
+      ],
+      "angle": "周期：第四周\n选题概述：小红书收藏密码：串联外滩、城隍庙等6大必打卡景点路线，将阿明小菜顺理成章植入为“最后一站最佳晚餐”。（上海一日游攻略🚶♀️打卡六大著名景点！）\n所需素材：副图插入阿明小菜营销",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_aming_xiaocai_09",
+      "clientId": "client_aming_xiaocai",
+      "title": "【选择互动】",
+      "type": "图文",
+      "publishDate": "2026-07-17",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "菜品品宣",
+        "热点互动"
+      ],
+      "angle": "周期：第四周\n选题概述：互动类，选出我们餐厅的菜品，给出官方搭配组合。（正餐的极限搭配？）\n所需素材：白底菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_aming_xiaocai_10",
+      "clientId": "client_aming_xiaocai",
+      "title": "【观点互动】",
+      "type": "图文",
+      "publishDate": "2026-07-21",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "菜品品宣",
+        "热点互动"
+      ],
+      "angle": "周期：第四周\n选题概述：引流互动，锐评上海菜，从夯到拉排名，回应大众对本帮菜的真实看法与评价。\n所需素材：白底菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_puyuan_yijing_spa_01",
+      "clientId": "client_puyuan_yijing_spa",
+      "title": "账号入驻 「壹期·壹会」",
+      "type": "图文",
+      "publishDate": "2026-07-06",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "探店招募",
+        "官宣入驻"
+      ],
+      "angle": "周期：第1周\n选题概述：璞元壹境正式入驻小红书\n\n品牌官方开篇官宣内容，完成账号基础认知铺垫。以自我介绍形式，直观展示2个门店优势：康桥独栋花园、浦东店复式洋房独特空间、面部 & 身体全品类护理，提前预告后续笔记内容方向，一次性输出门头、庭院、包间、茶歇实景素材，快速建立品牌第一印象，吸引本地潜在顾客持续关注账号。入驻首篇可以透露招募计划\n所需素材：封面图可以用康桥门头实拍、庭院全景 / 细节、独立包间环境、茶歇区摆盘、门店整体环境全景图、护理间干净环境图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_puyuan_yijing_spa_02",
+      "clientId": "client_puyuan_yijing_spa",
+      "title": "探店招募 「壹期·壹会」",
+      "type": "图文",
+      "publishDate": "2026-07-08",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "探店招募",
+        "到店活动"
+      ],
+      "angle": "周期：第1周\n选题概述：面向本地素人、探店达人发布免费体验招募，通过达人 / 素人真实到店实拍产出种草笔记，全方位展示门店环境、护理体验、服务细节；依托达人私域流量辐射康桥周边客群，搭配专属到店福利，直接引导线下到店，快速拓宽门店本地曝光、批量吸纳首批新客。  尽量工作日 spa 为主\n所需素材：门店环境全套氛围感图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_puyuan_yijing_spa_03",
+      "clientId": "client_puyuan_yijing_spa",
+      "title": "环境氛围类 「壹方·空间」",
+      "type": "图文",
+      "publishDate": "2026-07-14",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "探店招募",
+        "场景营销"
+      ],
+      "angle": "周期：第2周\n选题概述：承接招募热度，延续品宣。门店差异化流量核心内容，主打独栋庭院私密治愈场景。精准抓住女生追求安静避世、高颜值打卡拍照的需求，围绕庭院绿植、独立包间、休闲茶歇区产出氛围感图文，弱化硬广推销感，靠松弛静谧的环境画面提升点击率，塑造小众高端疗愈 SPA 的门店标签，激发用户探店打卡欲望。\n所需素材：单人私密包间、下午茶茶歇摆盘、花园户外座椅、店内环境图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_puyuan_yijing_spa_04",
+      "clientId": "client_puyuan_yijing_spa",
+      "title": "仪器品宣类 「壹净・清颜」",
+      "type": "图文",
+      "publishDate": "2026-07-16",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "到店活动",
+        "项目品宣"
+      ],
+      "angle": "周期：第2周\n选题概述：门店核心设备介绍，作为高端美容会所，到店核心理由之一有较为知名的项目或仪器设备背书，如海菲秀、牛奶光\n所需素材：核心设备介绍",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_puyuan_yijing_spa_05",
+      "clientId": "client_puyuan_yijing_spa",
+      "title": "避坑科普干货类 「壹刻·放松」",
+      "type": "图文",
+      "publishDate": "2026-07-21",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "科普干货"
+      ],
+      "angle": "周期：第3周\n选题概述：做完spa后，这三件事千万别做\n采用冲突感吸睛标题输出养护干货，科普 SPA、面部护理完成后的禁忌行为，说明不当操作会抵消护理效果；内容实用性强，容易被用户收藏留存，长期持续带来自然流量，同时强化门店细致专业的服务形象。\n所需素材：SPA 护理结束氛围感图、茶歇温水实拍、简约文字配图底图、包间休息区空镜",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_puyuan_yijing_spa_06",
+      "clientId": "client_puyuan_yijing_spa",
+      "title": "项目品宣类 「壹刻·放松」",
+      "type": "视频",
+      "publishDate": "2026-07-23",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "no",
+      "tags": [
+        "项目品宣",
+        "视频内容"
+      ],
+      "angle": "周期：第3周\n选题概述：喜马拉雅粉盐颂钵疗愈SPA（按摩 spa）\n\n服务过程、体验、效果介绍，承接上一篇笔记热度\n推荐门店特色spa项目\n（如有视频可以提供）\n所需素材：素材和流程",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_puyuan_yijing_spa_07",
+      "clientId": "client_puyuan_yijing_spa",
+      "title": "避坑科普干货类 「壹刻·放松」",
+      "type": "图文",
+      "publishDate": "2026-07-27",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "科普干货"
+      ],
+      "angle": "周期：第4周\n选题概述：长期养背的好处\n\n长期养生向干货科普，讲解定期背部 SPA 调理对体态、气血、疲劳缓解的长期益处，输出 “养护是长期坚持” 的观念，培养用户定期做身体护理的消费习惯，提升身体 SPA 复购率，吸引久坐、肩背僵硬的长期养护客群。\n所需素材：按摩图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_puyuan_yijing_spa_08",
+      "clientId": "client_puyuan_yijing_spa",
+      "title": "环境氛围类 「壹方·空间」",
+      "type": "图文",
+      "publishDate": "2026-07-29",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "探店招募",
+        "环境氛围"
+      ],
+      "angle": "周期：第4周\n选题概述：康桥这家花园SPA，适合周末去放空一下\n\n本地化标签引流笔记，带上 #康桥本地话题，突出独栋花园 SPA 周末放空的属性，实景展示高级庭院环境，主打城市避世打卡地，精准覆盖康桥周边想找休闲放松去处的本地女生，引导线下探店打卡。\n所需素材：环境图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_puyuan_yijing_spa_09",
+      "clientId": "client_puyuan_yijing_spa",
+      "title": "项目品宣类 「壹刻·放松」",
+      "type": "图文",
+      "publishDate": "2026-07-31",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "项目品宣"
+      ],
+      "angle": "周期：第5周\n选题概述：缓解焦虑 心情 深度放松\n主打情绪疗愈向内容，聚焦当代女性焦虑、精神紧绷、身心疲惫的痛点，分享全身 SPA 深度放松的体验感受，突出护理舒缓情绪、释放压力的核心价值，吸引压力大、需要独处放空的职场女性，带动身体 SPA 项目预约。\n所需素材：盐石、精油、颂钵、护理房、肩背局部、身体 SPA 推拿舒缓图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_puyuan_yijing_spa_10",
+      "clientId": "client_puyuan_yijing_spa",
+      "title": "服务品宣介绍 「壹处·细节」",
+      "type": "图文",
+      "publishDate": "2026-08-05",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "到店活动"
+      ],
+      "angle": "周期：第5周\n选题概述：深挖门店服务细节，讲解店内院线大牌洗护、全套护理仪式流程、沉浸式体验优势，突出门店专业质感与用心服务，打造差异化门店形象，积累优质口碑，提升到店转化率与顾客好评率，吸引注重体验感、追求高品质SPA的客群。\n所需素材：门店介绍/服务素材",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_xuanjia_jiangxie_01",
+      "clientId": "client_xuanjia_jiangxie",
+      "title": "旅游攻略",
+      "type": "图文",
+      "publishDate": "2026-06-24",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "published",
+      "needDesign": "yes",
+      "tags": [
+        "旅游攻略",
+        "热点互动"
+      ],
+      "angle": "周期：第1周\n（6.22-6.28）\n选题概述：结合暑假旅游热点，发布威海旅游地图攻略内容\n借势热点流量，带动账号曝光数据\n所需素材：-",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_xuanjia_jiangxie_02",
+      "clientId": "client_xuanjia_jiangxie",
+      "title": "创意热点",
+      "type": "视频",
+      "publishDate": "2026-06-26",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "published",
+      "needDesign": "no",
+      "tags": [
+        "菜品品宣",
+        "热点互动"
+      ],
+      "angle": "周期：第1周\n（6.22-6.28）\n选题概述：结合世界杯热点+店内菜品，发布足球点赞特效视频\n借势世界杯热点流量，带动账号点赞&涨粉数据\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_xuanjia_jiangxie_03",
+      "clientId": "client_xuanjia_jiangxie",
+      "title": "明星引流",
+      "type": "图文",
+      "publishDate": "2026-06-30",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "published",
+      "needDesign": "yes",
+      "tags": [
+        "到店活动",
+        "菜品品宣"
+      ],
+      "angle": "周期：第2周\n（6.29-7.5)\n选题概述：利用“董璇到店打卡”的明星光环为品质背书，降低游客对生腌品类的信任门槛。同时结合小红书流行的“截图盲盒”玩法，将传统的“明星打卡笔记”升级为高互动性的趣味测试。\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_xuanjia_jiangxie_04",
+      "clientId": "client_xuanjia_jiangxie",
+      "title": "创意热点",
+      "type": "图文",
+      "publishDate": "2026-07-03",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "review",
+      "needDesign": "yes",
+      "tags": [
+        "菜品品宣",
+        "热点互动"
+      ],
+      "angle": "周期：第2周\n（6.29-7.5)\n选题概述：集合世界杯热点，发布知名球员身价+菜品价值对应图\n借势热点流量，带动账号整体曝光数据\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_xuanjia_jiangxie_05",
+      "clientId": "client_xuanjia_jiangxie",
+      "title": "致敬经典栏目",
+      "type": "图文",
+      "publishDate": "2026-07-05",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "热点互动"
+      ],
+      "angle": "周期：第3周\n(7.6-7.12)\n选题概述：跟进世界杯相关热点-94年罗伯特·巴乔点球\n所需素材：经典人物肖像",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_xuanjia_jiangxie_06",
+      "clientId": "client_xuanjia_jiangxie",
+      "title": "门店活动",
+      "type": "图文",
+      "publishDate": "2026-07-08",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "到店活动",
+        "菜品品宣"
+      ],
+      "angle": "周期：第3周\n(7.6-7.12)\n选题概述：结合小红书打卡活动，到店用餐消费，发布小红书笔记\n可免费周边（待确认）\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_xuanjia_jiangxie_07",
+      "clientId": "client_xuanjia_jiangxie",
+      "title": "旅游攻略",
+      "type": "图文",
+      "publishDate": "2026-07-12",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "菜品品宣",
+        "旅游攻略"
+      ],
+      "angle": "周期：第3周\n(7.6-7.12)\n选题概述：结合暑假热点，发布威海旅游看日落最佳点位攻略，\n吸引游客群体，带动账号整体曝光数据\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_xuanjia_jiangxie_08",
+      "clientId": "client_xuanjia_jiangxie",
+      "title": "菜品推荐",
+      "type": "图文",
+      "publishDate": "2026-07-14",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "场景营销",
+        "菜品品宣"
+      ],
+      "angle": "周期：第4周\n(7.13-7.19)\n选题概述：游客来威海最核心的诉求是“避暑”和“体验海岛夏夜”。这个选题将门店招牌（酱蟹）与威海夏日场景深度融合（吹着海风吃酱蟹！威海的夏天也太快乐了吧！）\n所需素材：菜品图（副图为菜品图）",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_xuanjia_jiangxie_09",
+      "clientId": "client_xuanjia_jiangxie",
+      "title": "创意热点",
+      "type": "视频",
+      "publishDate": "2026-07-16",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "no",
+      "tags": [
+        "菜品品宣",
+        "热点互动"
+      ],
+      "angle": "周期：第4周\n(7.13-7.19)\n选题概述：结合小红书创意热点视频，转盘截图挑战和店内菜品\n引发网友互动，带动账号曝光数据\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_xuanjia_jiangxie_10",
+      "clientId": "client_xuanjia_jiangxie",
+      "title": "致敬经典栏目",
+      "type": "图文",
+      "publishDate": "2026-07-20",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "热点互动"
+      ],
+      "angle": "周期：第4周\n(7.13-7.19)\n选题概述：跟进世界杯相关热点、致敬经典人物-1986马拉多纳上帝之手+世纪进球\n所需素材：经典人物肖像",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_yaju_xiaoguan_01",
+      "clientId": "client_yaju_xiaoguan",
+      "title": "门店品宣",
+      "type": "图文",
+      "publishDate": "2026-07-03",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "review",
+      "needDesign": "yes",
+      "tags": [
+        "宴请场景",
+        "菜品品宣"
+      ],
+      "angle": "周期：第一周\n（7.1-7.8）\n选题概述：结合门店环境特色，发布人生36宴选题\n可承接不同类型宴请，引导留资获客\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_yaju_xiaoguan_02",
+      "clientId": "client_yaju_xiaoguan",
+      "title": "科普品宣",
+      "type": "图文",
+      "publishDate": "2026-07-07",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "宴请场景",
+        "菜品品宣"
+      ],
+      "angle": "周期：第一周\n（7.1-7.8）\n选题概述：科普宴席 8 类核心菜品搭配逻辑，结合店内招牌菜做实用点菜攻略，提升笔记收藏与长期曝光。\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_yaju_xiaoguan_03",
+      "clientId": "client_yaju_xiaoguan",
+      "title": "探店邀请",
+      "type": "图文",
+      "publishDate": "2026-07-10",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "探店招募",
+        "到店活动"
+      ],
+      "angle": "周期：第一周\n（7.1-7.8）\n选题概述：上线探店福利招募，以双人餐置换达人 / 素人到店种草，增加账号互动涨粉，丰富线上种草内容。\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_yaju_xiaoguan_04",
+      "clientId": "client_yaju_xiaoguan",
+      "title": "科普品宣",
+      "type": "图文",
+      "publishDate": "2026-07-12",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "宴请场景",
+        "菜品品宣"
+      ],
+      "angle": "周期：第二周\n（7.9-7.16）\n选题概述：图解中式圆桌宴请座位礼仪，解决请客落座尴尬痛点，依托实用攻略拉高笔记收藏与流量。\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_yaju_xiaoguan_05",
+      "clientId": "client_yaju_xiaoguan",
+      "title": "创意热点",
+      "type": "图文",
+      "publishDate": "2026-07-16",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "宴请场景",
+        "菜品品宣"
+      ],
+      "angle": "周期：第二周\n（7.9-7.16）\n选题概述：蹭世界杯热点趣味互动，球星身价换算门店宴席，植入招牌菜品，轻松互动带动笔记曝光。\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_yaju_xiaoguan_06",
+      "clientId": "client_yaju_xiaoguan",
+      "title": "探店招募倒计时",
+      "type": "图文",
+      "publishDate": "2026-07-18",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "探店招募",
+        "菜品品宣"
+      ],
+      "angle": "周期：第3周\n（7.17-7.24）\n选题概述：探店活动倒计时提醒，制造稀缺感，刺激意向用户抓紧报名，持续提升评论、私信咨询量。\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_yaju_xiaoguan_07",
+      "clientId": "client_yaju_xiaoguan",
+      "title": "科普品宣",
+      "type": "图文",
+      "publishDate": "2026-07-23",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "宴请场景",
+        "菜品品宣"
+      ],
+      "angle": "周期：第3周\n（7.17-7.24）\n选题概述：科普标准中餐上菜顺序，搭配店内菜品讲解宴席上菜逻辑，强化门店专业宴请定位。\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_yaju_xiaoguan_08",
+      "clientId": "client_yaju_xiaoguan",
+      "title": "科普品宣",
+      "type": "图文",
+      "publishDate": "2026-07-26",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "科普干货"
+      ],
+      "angle": "周期：第4周\n（7.25-7.31）\n选题概述：讲解中餐包间餐具摆放礼仪，展示门店精致摆台细节，用实用干货吸引用户收藏。\n所需素材：餐具图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_yaju_xiaoguan_09",
+      "clientId": "client_yaju_xiaoguan",
+      "title": "科普品宣",
+      "type": "图文",
+      "publishDate": "2026-07-28",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "宴请场景",
+        "菜品品宣"
+      ],
+      "angle": "周期：第4周\n（7.25-7.31）\n选题概述：科普江南国宴特色菜品，结合店内同款菜式，突出品牌地道江南菜优势。\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    },
+    {
+      "copywriting": "",
+      "imageOwner": "design",
+      "image": "",
+      "id": "note_client_yaju_xiaoguan_10",
+      "clientId": "client_yaju_xiaoguan",
+      "title": "旅游攻略",
+      "type": "图文",
+      "publishDate": "2026-07-31",
+      "planMonth": "2026-07",
+      "planKind": "monthly",
+      "status": "idea",
+      "needDesign": "yes",
+      "tags": [
+        "菜品品宣",
+        "旅游攻略"
+      ],
+      "angle": "周期：第4周\n（7.25-7.31）\n选题概述：结合暑期北京旅游热潮，推荐游客聚餐选择江南小馆，承接外地游客家庭聚餐需求。\n所需素材：菜品图",
+      "reviewNote": "来源：月度规划表。✅ 标记已按已发布导入；未标记按待推进导入。"
+    }
+  ],
+  "calendars": [
+    {
+      "key": "client_aming_xiaocai_2026-07",
+      "clientId": "client_aming_xiaocai",
+      "month": "2026-07",
+      "image": "",
+      "summary": "【阿明小菜】2026年7月月度规划一览\n\n1. 6月25日｜【官宣入驻】｜已发布\n   标签：福利活动、官宣入驻\n   概述：周期：第1周；选题概述：宣布官方入驻，采用“老板请吃霸王餐”的直球福利引导评论。（官宣！阿明小菜正式入驻，老板放话：请大家吃饭！）；所需素材：1. 主图设计：门店门头/豪华包厢大气实景图； 2. 副图—包厢环境展示图、菜品的展示图。\n\n2. 6月30日｜【场景营销】｜已发布\n   标签：场景营销、宴请场景\n   概述：周期：第2周；选题概述：聚焦毕业季与升学宴痛点，教用户如何点出一桌让长辈恩师满意的“本帮雅宴”。（谢师宴｜在老上海本帮味道里，敬一杯给青春！🎓）；所需素材：包厢远距离展示图：10人桌大圆桌布景、高档餐具及仪式感摆盘的远景图。\n\n3. 7月1日｜【流量热点】｜已发布\n   标签：菜品品宣、热点互动\n   概述：周期：第2周；选题概述：集合世界杯热点，发布知名球员身价+菜品价值对应图；借势热点流量，带动账号整体曝光数据；所需素材：菜品图\n\n4. 7月3日｜【场景营销】｜已发布\n   标签：场景营销\n   概述：周期：第2周；选题概述：聚焦毕业季的离别与感恩，主打“老上海本帮味道，新邻里温情”。将阿明油爆虾、金牌红烧肉、深海大黄鱼等招牌菜与“红火前程、鱼跃龙门”等毕业祝愿强行绑定，在私密包厢里为师生和家长打造温馨、不拘束、有人情味的告别仪式感。；所需素材：包厢图\n\n5. 7月7日｜【探店招募】｜待选题\n   标签：探店招募、到店活动\n   概述：周期：第三周；选题概述：长期置顶“首席品鉴官招募令”，全城寻找爱吃本帮菜的宝子到店免费吃一整桌。（首席品鉴官招募丨全城寻找爱吃本帮菜的宝子，请你吃一整桌！）【活动名额/套餐待确认】；所需素材：包厢远景图，详见示例图\n\n6. 7月10日｜【菜品品宣】｜待选题\n   标签：宴请场景、菜品品宣\n   概述：周期：第三周；选题概述：呈现阿明小菜的招牌菜图，凸显出品质量。（一箸本帮，一席雅宴｜ 阿明小菜招牌菜图）；所需素材：招牌菜品特写\n\n7. 7月13日｜【热梗互动】｜待选题\n   标签：菜品品宣、热点互动\n   概述：周期：第四周；选题概述：趣味引流互动选择题：“假如让你担跟你在一起，选三种菜品吃一辈子”。；所需素材：白底菜品图\n\n8. 7月15日｜【流量热点】｜待选题\n   标签：热点互动\n   概述：周期：第四周；选题概述：小红书收藏密码：串联外滩、城隍庙等6大必打卡景点路线，将阿明小菜顺理成章植入为“最后一站最佳晚餐”。（上海一日游攻略🚶♀️打卡六大著名景点！）；所需素材：副图插入阿明小菜营销\n\n9. 7月17日｜【选择互动】｜待选题\n   标签：菜品品宣、热点互动\n   概述：周期：第四周；选题概述：互动类，选出我们餐厅的菜品，给出官方搭配组合。（正餐的极限搭配？）；所需素材：白底菜品图\n\n10. 7月21日｜【观点互动】｜待选题\n   标签：菜品品宣、热点互动\n   概述：周期：第四周；选题概述：引流互动，锐评上海菜，从夯到拉排名，回应大众对本帮菜的真实看法与评价。；所需素材：白底菜品图",
+      "updatedAt": "2026-07-05T09:13:29.077Z"
+    }
+  ],
+  "calendarTasks": [],
+  "taskActions": {
+    "546E5a626aSQ5qGMwrfphbHon7nvvIjpn6nkuZDmnovvvInvvJrlgqzlrqLmiLflrqHmoLh844CK5Yib5oSP54Ot54K544CL5bey5Yiw5Y+R5biD5pe26Ze077yM5Y+v5oyJ6KeE5YiZ5YWI5Y+R77yM5Y+R5biD5ZCO5ZCM5q2l5a6i5oi35Y+v5L+u5pS544CC": "done",
+    "546E5a626aSQ5qGMwrfphbHon7nvvIjpn6nkuZDmnovvvInvvJrnrJTorrDlt7LpgL7mnJ9844CK5Yib5oSP54Ot54K544CL5Y6f6K6h5YiSIDfmnIgz5pelIOWPkeW4g++8jOW9k+WJjeeKtuaAge+8muW+heWuouaIt+WuoeaguOOAgg": "done",
+    "manual_task_1783242199980_019e2bbb623778": "done",
+    "manual_task_1783262272795_c245c557f514f8": "active"
+  },
+  "taskOverrides": {},
+  "customTasks": [
+    {
+      "id": "manual_task_1783242199980_019e2bbb623778",
+      "title": "1.阿明小菜",
+      "bucket": "ui",
+      "scope": "day",
+      "createdAt": "2026-07-05T09:03:19.980Z"
+    },
+    {
+      "id": "manual_task_1783246268683_7f135246c1ba78",
+      "title": "阿明小菜",
+      "bucket": "un",
+      "scope": "day",
+      "createdAt": "2026-07-05T10:11:08.683Z"
+    },
+    {
+      "id": "manual_task_1783262272795_c245c557f514f8",
+      "title": "1.阿明小菜确认探店名额",
+      "bucket": "ui",
+      "scope": "day",
+      "createdAt": "2026-07-05T14:37:52.795Z"
+    }
+  ],
+  "dayPlans": [
+    {
+      "id": "day_plan_1783259604905_76a5c6c81eded",
+      "text": "阿明小菜",
+      "done": true,
+      "date": "2026-07-05",
+      "order": 0,
+      "createdAt": "2026-07-05T13:53:24.905Z"
+    }
+  ],
+  "reportTemplates": {},
+  "updatedAt": "2026-07-05T14:37:52.800Z"
+}
