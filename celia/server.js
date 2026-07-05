@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { URL } = require("url");
 
-const HOST = process.env.HOST || "127.0.0.1";
+const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 8787);
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, "data");
