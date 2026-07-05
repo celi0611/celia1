@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>牛马工作日记</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="折叠侧边栏">☰</button>
+    <aside class="sidebar">
+      <div class="brand">
+        <img class="brand-avatar" src="./assets/rabbit-avatar.jpg" alt="粉红兔子头像" />
+        <div>
+          <h1>牛马工作日记</h1>
+          <p id="todayText"></p>
+        </div>
+      </div>
+      <div id="storageStatus" class="storage-status">正在连接数据</div>
+      <nav class="nav" aria-label="页面导航">
+        <button class="nav-btn active" data-view="dashboard">今日</button>
+        <button class="nav-btn" data-view="dayplan">日/周计划</button>
+        <button class="nav-btn" data-view="clients">客户</button>
+        <button class="nav-btn" data-view="plans">月度规划</button>
+        <button class="nav-btn" data-view="designs">设计提需</button>
+        <button class="nav-btn" data-view="notes">笔记</button>
+        <button class="nav-btn" data-view="types">笔记类型</button>
+        <button class="nav-btn" data-view="brands">品牌参考</button>
+        <button class="nav-btn" data-view="reports">周月报管理</button>
+        <button class="nav-btn" data-view="settings">备份</button>
+      </nav>
+      <div class="sidebar-foot">
+        <img class="sidebar-rabbit" src="./assets/rabbit-sidebar-cutout.png" alt="粉红兔子插图" />
+        <button id="exportJson" class="ghost-btn">导出数据</button>
+        <label class="ghost-btn file-btn">
+          导入数据
+          <input id="importJson" type="file" accept="application/json" />
+        </label>
+      </div>
+    </aside>
+
+    <main class="app">
+        <section id="dashboard" class="view active">
+        <div class="quick-tabs">
+          <button class="quick-tab" type="button" data-quick-target="clients">客户进度</button>
+          <button class="quick-tab" type="button" data-scroll-target="todayTaskAnchor">今日任务</button>
+          <button class="quick-tab" type="button" data-quick-target="dayplan">日/周计划</button>
+        </div>
+        <section class="panel progress-top-panel">
+          <div class="panel-title">
+            <h3>客户进度</h3>
+            <span>月中前尽量完成 5 篇</span>
+          </div>
+          <div id="clientProgress" class="progress-list"></div>
+        </section>
+
+        <div class="rabbit-hero">
+          <img class="hero-rabbit" src="./assets/rabbit-hero-cutout.png" alt="粉红兔子头像" />
+          <div>
+            <h2>今日要做的事</h2>
+            <p>先看日/周计划，再处理紧急重要。</p>
+          </div>
+        </div>
+        <section class="panel">
+          <div class="panel-title">
+            <h3>我的日/周计划</h3>
+              <span>点击后显示绿色对勾</span>
+          </div>
+          <div id="todayPlanPreview" class="day-plan-list"></div>
+        </section>
+        <div id="todayTaskAnchor" class="topbar">
+          <div>
+            <h2>今日任务</h2>
+            <p>按客户周期、发布节点和周报规则自动汇总。</p>
+          </div>
+          <div class="toolbar">
+            <select id="taskVisibilityFilter">
+              <option value="active">未读/未完成</option>
+              <option value="read">已读</option>
+              <option value="done">已完成</option>
+              <option value="all">全部任务</option>
+            </select>
+            <button id="copyToday" class="primary-btn">复制今日清单</button>
+          </div>
+        </div>
+
+        <section class="panel custom-task-panel">
+          <div class="panel-title">
+            <h3>添加日计划 / 周计划</h3>
+            <span>手动补充任务并保存</span>
+          </div>
+          <form id="customTaskForm" class="inline-form">
+            <input id="customTaskTitle" placeholder="例如：联系阿明小菜确认探店活动名额" required />
+            <select id="customTaskBucket">
+              <option value="ui">紧急重要</option>
+              <option value="un">紧急不重要</option>
+              <option value="ni">不紧急重要</option>
+              <option value="nn">不紧急不重要</option>
+            </select>
+            <select id="customTaskScope">
+              <option value="day">日计划</option>
+              <option value="week">周计划</option>
+            </select>
+            <button class="primary-btn" type="submit">添加</button>
+          </form>
+        </section>
+
+        <div class="metric-grid">
+          <article class="metric">
+            <span>服务客户</span>
+            <strong id="metricClients">0</strong>
+          </article>
+          <article class="metric">
+            <span>本月已发</span>
+            <strong id="metricPublished">0</strong>
+          </article>
+          <article class="metric">
+            <span>待审核</span>
+            <strong id="metricReview">0</strong>
+          </article>
+          <article class="metric">
+            <span>本周待发</span>
+            <strong id="metricWeek">0</strong>
+          </article>
+        </div>
+
+        <div class="workbench">
+          <section class="panel wide">
+            <div class="panel-title">
+              <h3>必须处理</h3>
+              <span id="urgentCount">0 项</span>
+            </div>
+            <div id="urgentList" class="task-list"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-title">
+              <h3>风险提醒</h3>
+              <span id="riskCount">0 项</span>
+            </div>
+            <div id="riskList" class="task-list compact"></div>
+          </section>
+        </div>
+
+        <section id="dayWeekAnchor" class="panel">
+          <div class="panel-title">
+            <h3>日计划 / 周计划</h3>
+            <span>按紧急重要程度归类</span>
+          </div>
+          <div id="quadrantBoard" class="quadrant-board"></div>
+        </section>
+
+      </section>
+
+      <section id="dayplan" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>日/周计划</h2>
+          </div>
+          <button id="dayCalendarJump" class="primary-btn" type="button">日历大盘</button>
+        </div>
+        <section class="panel day-week-board">
+          <div class="day-week-columns">
+            <div>
+              <div class="panel-title">
+                <h3>今日清单</h3>
+                <div class="panel-actions">
+                  <button id="copyDayPlans" class="ghost-btn mini-action" type="button">复制全部</button>
+                  <select id="dayPlanDateSelect"></select>
+                </div>
+              </div>
+              <div id="dayPlanList" class="day-plan-list"></div>
+              <form id="dayPlanForm" class="inline-form bottom-add-form">
+                <input id="dayPlanText" placeholder="例如：写阿明小菜 7月7日探店招募文案" required />
+                <button class="primary-btn" type="submit">添加</button>
+              </form>
+            </div>
+            <div>
+              <div class="panel-title">
+                <h3>周计划</h3>
+                <button id="copyWeekPlans" class="ghost-btn mini-action" type="button">复制全部</button>
+              </div>
+              <div id="weekPlanList" class="day-plan-list"></div>
+              <form id="weekPlanForm" class="inline-form bottom-add-form">
+                <input id="weekPlanText" placeholder="例如：本周完成雅居小馆月报复盘" required />
+                <button class="primary-btn" type="submit">添加</button>
+              </form>
+            </div>
+          </div>
+        </section>
+        <section id="dayCalendarSection" class="panel">
+          <div class="panel-title">
+            <h3>日历大盘</h3>
+            <span>点击日期新增/编辑当日任务</span>
+          </div>
+          <div class="toolbar calendar-toolbar">
+            <select id="dayCalendarMonth"></select>
+          </div>
+          <div id="dayMonthBoard" class="month-board"></div>
+          <section id="dayCalendarDayEditor" class="calendar-day-editor" hidden>
+            <div class="item-head">
+              <strong id="dayCalendarDayTitle">当日任务</strong>
+              <button id="closeDayCalendarDay" class="ghost-btn" type="button">关闭</button>
+            </div>
+            <form id="dayCalendarTaskForm" class="inline-form">
+              <input id="dayCalendarTaskText" placeholder="输入这一天要做的事" />
+              <button class="primary-btn" type="submit">添加</button>
+            </form>
+            <div id="dayCalendarDayTaskList" class="day-plan-list"></div>
+          </section>
+        </section>
+      </section>
+
+      <section id="clients" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>客户台账</h2>
+            <p>记录接手日期、审核方式、发布方式和复盘节点。</p>
+          </div>
+          <button id="resetClientForm" class="primary-btn">新增客户</button>
+        </div>
+
+        <div class="clients-layout">
+          <section class="panel">
+            <div class="panel-title">
+              <h3>客户基础资料</h3>
+              <span id="clientCount">0 位</span>
+            </div>
+            <div id="clientList" class="client-list"></div>
+          </section>
+
+          <form id="clientForm" class="panel form-panel">
+            <input type="hidden" id="clientId" />
+            <label>
+              客户名称
+              <input id="clientName" required placeholder="例如：某某烤肉" />
+            </label>
+            <div class="form-row">
+              <label>
+                客户类型
+                <select id="clientType">
+                  <option value="new">新客户</option>
+                  <option value="old">老客户</option>
+                </select>
+              </label>
+              <label>
+                接手日期
+                <input id="clientStart" type="date" required />
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                月目标
+                <input id="clientTarget" type="number" min="1" max="30" value="10" />
+              </label>
+              <label>
+                签约时长
+                <select id="clientContractMonths">
+                  <option value="">未填写</option>
+                  <option value="3">3个月</option>
+                  <option value="6">6个月</option>
+                  <option value="12">12个月</option>
+                </select>
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                发布人
+                <select id="clientPublisher">
+                  <option value="me">我发布</option>
+                  <option value="client">客户发布</option>
+                  <option value="mixed">双方都有</option>
+                </select>
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                客户审核
+                <select id="clientReview">
+                  <option value="required">需要审核</option>
+                  <option value="optional">到点未审可先发</option>
+                  <option value="none">无需审核</option>
+                </select>
+              </label>
+              <label>
+                服务状态
+                <select id="clientStatus">
+                  <option value="active">进行中</option>
+                  <option value="paused">暂停</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              固定发布日/偏好
+              <input id="clientPublishDays" placeholder="例如：周二、周四、周六" />
+            </label>
+            <label>
+              主页链接
+              <input id="clientProfileUrl" placeholder="小红书主页链接、点评链接等" />
+            </label>
+            <label>
+              账号简介
+              <textarea id="clientBio" rows="3" placeholder="客户小红书简介、账号定位、门店卖点"></textarea>
+            </label>
+            <label>
+              客户注意点
+              <textarea id="clientAttention" rows="4" placeholder="客户审核习惯、老板偏好、禁忌词、沟通注意点"></textarea>
+            </label>
+            <label>
+              资料备注
+              <textarea id="clientNotes" rows="3" placeholder="账号定位、资料来源、其他背景信息"></textarea>
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="primary-btn">保存客户</button>
+              <button type="button" id="deleteClient" class="danger-btn">删除</button>
+            </div>
+          </form>
+
+        </div>
+      </section>
+
+      <section id="clientDetail" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>客户详情</h2>
+            <p>点击客户卡片后查看完整资料；编辑请回客户台账右侧表单。</p>
+          </div>
+        </div>
+        <section class="panel">
+          <div id="clientDetailContent" class="client-detail"></div>
+        </section>
+      </section>
+
+      <section id="plans" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>客户月度规划</h2>
+            <p>按客户和月份横向查看月度 10 篇与备选方案。</p>
+          </div>
+          <div class="toolbar">
+            <select id="planClientFilter"></select>
+            <select id="planMonthFilter"></select>
+          </div>
+        </div>
+        <section class="panel">
+          <div id="planBoard" class="plan-wide-board"></div>
+        </section>
+      </section>
+
+      <section id="designs" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>设计提需</h2>
+            <p>笔记发布前 2 天提醒，区分自己制作图片和设计制作图片。</p>
+          </div>
+          <div class="toolbar">
+            <select id="designClientFilter"></select>
+            <select id="designMonthFilter"></select>
+          </div>
+        </div>
+        <section class="panel">
+          <div id="designRequestList" class="design-list"></div>
+        </section>
+      </section>
+
+      <section id="notes" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>笔记排期</h2>
+            <p>围绕发布日倒推设计、文案、审核和发布。</p>
+          </div>
+          <button id="resetNoteForm" class="primary-btn">新增笔记</button>
+        </div>
+
+        <div class="split">
+          <form id="noteForm" class="panel form-panel">
+            <input type="hidden" id="noteId" />
+            <label>
+              所属客户
+              <select id="noteClient" required></select>
+            </label>
+            <label>
+              笔记主题
+              <input id="noteTitle" required placeholder="例如：双人套餐种草" />
+            </label>
+            <div class="form-row">
+              <label>
+                形式
+                <select id="noteType">
+                  <option value="图文">图文</option>
+                  <option value="视频">视频</option>
+                </select>
+              </label>
+              <label>
+                计划发布日
+                <input id="noteDate" type="date" required />
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                规划月份
+                <input id="notePlanMonth" type="month" />
+              </label>
+              <label>
+                所属栏目
+                <select id="notePlanKind">
+                  <option value="monthly">月度规划</option>
+                  <option value="backup">备选方案</option>
+                </select>
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                状态
+                <select id="noteStatus">
+                  <option value="idea">待选题</option>
+                  <option value="design">待设计</option>
+                  <option value="copy">待文案</option>
+                  <option value="production">待制作</option>
+                  <option value="review">待客户审核</option>
+                  <option value="scheduled">待发布</option>
+                  <option value="published">已发布</option>
+                </select>
+              </label>
+              <label>
+                需要设计
+                <select id="noteDesign">
+                  <option value="yes">需要</option>
+                  <option value="no">不需要</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              图片制作
+              <select id="noteImageOwner">
+                <option value="design">设计制作图片</option>
+                <option value="self">自己制作图片</option>
+              </select>
+            </label>
+            <label>
+              选题标签
+              <input id="noteTags" placeholder="例如：探店招募、场景营销，最多建议 1-2 个" />
+            </label>
+            <label>
+              活动/卖点
+              <textarea id="noteAngle" rows="3" placeholder="套餐、到店有礼、探店方向、菜品卖点"></textarea>
+            </label>
+            <label>
+              笔记文案
+              <textarea id="noteCopywriting" rows="6" placeholder="标题、正文、话题、发布说明都可以写在这里"></textarea>
+            </label>
+            <label>
+              参考图片
+              <input id="noteImage" type="file" accept="image/*" />
+            </label>
+            <div id="noteImagePreview" class="image-preview empty">暂无参考图片</div>
+            <label>
+              审核备注
+              <textarea id="noteReviewNote" rows="2" placeholder="客户反馈、是否可到点先发"></textarea>
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="primary-btn">保存笔记</button>
+              <button type="button" id="deleteNote" class="danger-btn">删除</button>
+            </div>
+          </form>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h3>排期列表</h3>
+              <div class="toolbar">
+                <select id="noteFilterClient"></select>
+                <select id="noteFilterMonth"></select>
+                <select id="noteFilterKind">
+                  <option value="all">全部栏目</option>
+                  <option value="monthly">月度规划</option>
+                  <option value="backup">备选方案</option>
+                </select>
+                <select id="noteFilterPublish">
+                  <option value="all">全部</option>
+                  <option value="unpublished" selected>未发布</option>
+                  <option value="published">已发布</option>
+                </select>
+                <select id="noteFilterSubStatus">
+                  <option value="all">全部未发布状态</option>
+                  <option value="idea">待选题</option>
+                  <option value="design">待设计/提需</option>
+                  <option value="copy">待文案</option>
+                  <option value="production">待制作</option>
+                  <option value="review">待客户审核</option>
+                  <option value="scheduled">待发布</option>
+                </select>
+                <select id="noteFilterTag"></select>
+                <button id="createMonthPlan" class="ghost-btn">生成本月 10 篇</button>
+              </div>
+            </div>
+            <div id="noteProgressOverview" class="progress-overview"></div>
+            <div id="noteList" class="note-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="types" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>笔记类型</h2>
+            <p>按标签查看过往已发布笔记，复用相似选题。</p>
+          </div>
+          <div class="toolbar">
+            <select id="typeTagFilter"></select>
+            <select id="typeClientFilter"></select>
+          </div>
+        </div>
+        <section class="panel">
+          <div id="typeHistoryList" class="note-list"></div>
+        </section>
+      </section>
+
+      <section id="brands" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>品牌参考</h2>
+            <p>保存对标账号，小红书选题策划时快速打开参考。</p>
+          </div>
+        </div>
+        <div class="brand-layout">
+          <section class="panel brand-list-panel">
+            <div class="panel-title">
+              <h3>对标品牌列表</h3>
+              <span id="brandCount">0 个</span>
+            </div>
+            <input id="brandSearch" class="brand-search" placeholder="搜索品牌名称或链接" />
+            <div id="brandList" class="brand-list"></div>
+          </section>
+          <form id="brandForm" class="panel form-panel brand-editor">
+            <div class="panel-title">
+              <h3>品牌信息</h3>
+              <button id="resetBrandForm" class="ghost-btn mini-action" type="button">新增品牌</button>
+            </div>
+            <input type="hidden" id="brandId" />
+            <label>
+              品牌名称
+              <input id="brandName" placeholder="例如：卫龙辣条" required />
+            </label>
+            <label>
+              小红书主页链接
+              <input id="brandUrl" placeholder="粘贴小红书主页链接" required />
+            </label>
+            <div class="brand-logo-editor">
+              <div id="brandLogoPreview" class="brand-logo-preview">品</div>
+              <div class="form-actions">
+                <button id="autoBrandLogo" class="ghost-btn" type="button">自动获取Logo</button>
+                <label class="ghost-btn file-btn">
+                  上传Logo
+                  <input id="brandLogoFile" type="file" accept="image/*" />
+                </label>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="primary-btn" type="submit">保存品牌</button>
+              <button id="deleteBrand" class="danger-btn" type="button">删除</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="reports" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>周月报管理</h2>
+            <p>月报和周报固定在顶部切换。</p>
+          </div>
+          <button id="copyReport" class="primary-btn">复制周报</button>
+        </div>
+        <div class="report-tabs">
+          <button class="report-tab active" type="button" data-report-target="weeklyReportSection">周报</button>
+          <button class="report-tab" type="button" data-report-target="monthlyReportSection">月报</button>
+        </div>
+        <section id="weeklyReportSection" class="panel report-section">
+          <div class="panel-title">
+            <h3>本周需要发周报的客户</h3>
+            <span>可直接选择客户生成</span>
+          </div>
+          <div id="reportClientQueue" class="report-client-grid"></div>
+        </section>
+        <div id="weeklyReportEditor" class="split report-section">
+          <section class="panel form-panel">
+            <label>
+              客户
+              <select id="reportClient"></select>
+            </label>
+            <label>
+              上周运营数据
+              <textarea id="reportData" rows="4" placeholder="手动填写数据，如曝光、阅读、互动、粉丝等"></textarea>
+            </label>
+            <label>
+              上周运营总结
+              <textarea id="reportDone" rows="6" placeholder="手动填写上周完成事项、问题、客户反馈"></textarea>
+            </label>
+            <label>
+              本周工作计划
+              <textarea id="reportPlan" rows="6" placeholder="手动填写本周选题、发布、提需、审核、活动对接"></textarea>
+            </label>
+            <div class="form-actions">
+              <button id="saveReportTemplate" class="ghost-btn" type="button">保存该客户模板</button>
+              <button id="loadReportTemplate" class="ghost-btn" type="button">载入上次模板</button>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-title">
+              <h3>周报预览</h3>
+              <span>实时生成，可直接复制</span>
+            </div>
+            <pre id="reportPreview" class="report-preview"></pre>
+          </section>
+        </div>
+
+        <section id="monthlyReportSection" class="panel report-section">
+          <div class="panel-title">
+            <h3>月报生成</h3>
+            <span>手动填写，可复制文字或截图复盘</span>
+          </div>
+          <div class="form-row">
+            <label>
+              月报客户
+              <select id="monthlyReportClient"></select>
+            </label>
+            <label>
+              月报月份
+              <select id="monthlyReportMonth"></select>
+            </label>
+          </div>
+          <div class="checkbox-grid">
+            <label><input class="monthly-goal" type="checkbox" value="品牌曝光" checked /> 品牌曝光</label>
+            <label><input class="monthly-goal" type="checkbox" value="用户增长" checked /> 用户增长</label>
+            <label><input class="monthly-goal" type="checkbox" value="交易转化" /> 交易转化</label>
+            <label><input class="monthly-goal" type="checkbox" value="留资获客" /> 留资获客</label>
+          </div>
+          <div class="form-row three">
+            <label>发篇数<input id="monthlyPostCount" /></label>
+            <label>百赞爆文<input id="monthlyHotPost" /></label>
+            <label>百赞爆文率<input id="monthlyHotRate" /></label>
+            <label>近30日曝光量<input id="monthlyExposure" /></label>
+            <label>总阅读量<input id="monthlyReads" /></label>
+            <label>总粉丝量<input id="monthlyFans" /></label>
+          </div>
+          <div class="form-row">
+            <label>本月复盘<textarea id="monthlyReview" rows="5"></textarea></label>
+            <label>下月规划<textarea id="monthlyNextPlan" rows="5"></textarea></label>
+          </div>
+          <div class="form-row">
+            <label>爆款笔记标题<input id="monthlyBestTitle" /></label>
+            <label>爆款笔记链接<input id="monthlyBestLink" /></label>
+          </div>
+          <label class="ghost-btn file-btn">
+            插入爆款展示图
+            <input id="monthlyBestImage" type="file" accept="image/*" />
+          </label>
+          <div id="monthlyBestImagePreview" class="image-preview empty">暂无展示图</div>
+          <label>本月内容方向<textarea id="monthlyContentDirection" rows="4"></textarea></label>
+          <label>下月运营调整动作<textarea id="monthlyActions" rows="5" placeholder="手动填写流量、涨粉、转化优化方案"></textarea></label>
+          <div id="monthlyVisual" class="monthly-visual"></div>
+          <button id="copyMonthlyReport" class="primary-btn" type="button">复制月报</button>
+          <button id="showMonthlyVisual" class="ghost-btn" type="button">生成Excel样式大图</button>
+          <pre id="monthlyReportPreview" class="report-preview monthly-preview"></pre>
+        </section>
+      </section>
+
+      <section id="settings" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>备份与提醒</h2>
+            <p>当前版本先管理台账，后续可接每天 7 点邮件。</p>
+          </div>
+        </div>
+        <section class="panel settings-panel">
+          <h3>每日邮件建议结构</h3>
+          <div class="mail-template">
+            <strong>今日重点</strong>
+            <span>最紧急的发布、提需、审核和周报。</span>
+            <strong>今日必须完成</strong>
+            <span>到期任务和逾期任务。</span>
+            <strong>今日需催客户</strong>
+            <span>待审核、待活动信息、待确认方案。</span>
+            <strong>本周风险</strong>
+            <span>月中 5 篇、本月 10 篇、复盘和下月规划。</span>
+          </div>
+          <button id="seedDemo" class="ghost-btn">填入示例数据</button>
+          <button id="clearAll" class="danger-btn">清空全部数据</button>
+        </section>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./data/ledger-bootstrap.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

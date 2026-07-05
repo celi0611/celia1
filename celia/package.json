@@ -1,0 +1,15 @@
+{
+  "name": "pink-rabbit-xhs-ledger",
+  "version": "1.0.0",
+  "private": true,
+  "description": "牛马工作日记 - 小红书运营云端台账",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {}
+}
