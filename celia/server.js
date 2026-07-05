@@ -47,6 +47,8 @@ function normalizeLedger(input) {
     weekPlans: Array.isArray(input?.weekPlans) ? input.weekPlans : [],
     brandRefs: Array.isArray(input?.brandRefs) ? input.brandRefs : [],
     reportTemplates: input?.reportTemplates && typeof input.reportTemplates === "object" ? input.reportTemplates : {},
+    progressOverrides: input?.progressOverrides && typeof input.progressOverrides === "object" ? input.progressOverrides : {},
+    mailTemplate: typeof input?.mailTemplate === "string" ? input.mailTemplate : "",
     updatedAt: new Date().toISOString(),
   };
 }

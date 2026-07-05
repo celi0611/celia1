@@ -1233,9 +1233,11 @@ textarea:focus {
 
 .plan-date-highlight {
   color: var(--red);
-  font-size: 24px;
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 .plan-date-inline {
@@ -1266,8 +1268,8 @@ textarea:focus {
 
 .brand-item {
   display: grid;
-  grid-template-columns: 54px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
   align-items: center;
   padding: 12px;
   border: 1px solid var(--line);
@@ -1315,7 +1317,9 @@ textarea:focus {
 
 .brand-copy strong {
   overflow: hidden;
+  color: var(--red);
   font-size: 16px;
+  font-weight: 900;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1350,6 +1354,56 @@ textarea:focus {
   height: 88px;
   flex: 0 0 auto;
   font-size: 28px;
+}
+
+.progress-edit-row,
+.note-link-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin: 10px 0;
+}
+
+.progress-edit-row label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.progress-edit-row input,
+.note-link-row input,
+.mail-template-editor {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.mail-template-editor {
+  min-height: 220px;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.helper-text {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+#weekPlanWeekSelect {
+  width: 88px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .image-preview,

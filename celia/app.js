@@ -1,7 +1,7 @@
 const STORAGE_KEY = "xhs-ledger-v2";
 const API_BASE = "";
 
-let state = { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], reportTemplates: {} };
+let state = { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], reportTemplates: {}, progressOverrides: {}, mailTemplate: "" };
 let backendOnline = false;
 let backendMode = "local";
 let selectedClientId = "";
@@ -10,21 +10,24 @@ let selectedTag = "all";
 let selectedCalendarDate = "";
 let selectedDayCalendarDate = "";
 let selectedDayPlanDate = "";
+let selectedWeekPlanWeek = "";
 let draggingDayPlanId = "";
 let draggingWeekPlanId = "";
 let previousView = "dashboard";
 let draggingTaskId = "";
 let clientDetailEditMode = false;
 let lastClientImport = null;
+let progressEditMode = false;
 
 const $ = (id) => document.getElementById(id);
 const today = startOfDay(new Date());
 selectedCalendarDate = dateValue(today);
 selectedDayCalendarDate = dateValue(today);
 selectedDayPlanDate = dateValue(today);
+selectedWeekPlanWeek = weekKey(today);
 
 function emptyState() {
-  return { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], reportTemplates: {} };
+  return { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], reportTemplates: {}, progressOverrides: {}, mailTemplate: defaultMailTemplate() };
 }
 
 function bootstrapState() {
@@ -46,6 +49,8 @@ function preferNonEmptyData(primary, fallback) {
       taskActions: Object.keys(normalizedPrimary.taskActions).length ? normalizedPrimary.taskActions : normalizedFallback.taskActions,
       taskOverrides: Object.keys(normalizedPrimary.taskOverrides).length ? normalizedPrimary.taskOverrides : normalizedFallback.taskOverrides,
       reportTemplates: Object.keys(normalizedPrimary.reportTemplates).length ? normalizedPrimary.reportTemplates : normalizedFallback.reportTemplates,
+      progressOverrides: Object.keys(normalizedPrimary.progressOverrides).length ? normalizedPrimary.progressOverrides : normalizedFallback.progressOverrides,
+      mailTemplate: normalizedPrimary.mailTemplate || normalizedFallback.mailTemplate,
     };
   }
   return normalizedPrimary;
@@ -68,6 +73,8 @@ function loadLocalState() {
       weekPlans: Array.isArray(parsed.weekPlans) ? parsed.weekPlans : [],
       brandRefs: Array.isArray(parsed.brandRefs) ? parsed.brandRefs.map(normalizeBrand) : [],
       reportTemplates: parsed.reportTemplates && typeof parsed.reportTemplates === "object" ? parsed.reportTemplates : {},
+      progressOverrides: parsed.progressOverrides && typeof parsed.progressOverrides === "object" ? parsed.progressOverrides : {},
+      mailTemplate: parsed.mailTemplate || defaultMailTemplate(),
     };
   } catch {
     return emptyState();
@@ -82,6 +89,8 @@ async function loadState() {
     const local = loadLocalState();
     if (!Object.prototype.hasOwnProperty.call(data, "weekPlans")) data.weekPlans = local.weekPlans;
     if (!Object.prototype.hasOwnProperty.call(data, "brandRefs")) data.brandRefs = local.brandRefs;
+    if (!Object.prototype.hasOwnProperty.call(data, "progressOverrides")) data.progressOverrides = local.progressOverrides;
+    if (!Object.prototype.hasOwnProperty.call(data, "mailTemplate")) data.mailTemplate = local.mailTemplate;
     backendOnline = true;
     await loadBackendMode();
     return preferNonEmptyData(data, window.__LEDGER_BOOTSTRAP__);
@@ -95,6 +104,8 @@ async function loadState() {
         const local = loadLocalState();
         if (!Object.prototype.hasOwnProperty.call(staticData, "weekPlans")) staticData.weekPlans = local.weekPlans;
         if (!Object.prototype.hasOwnProperty.call(staticData, "brandRefs")) staticData.brandRefs = local.brandRefs;
+        if (!Object.prototype.hasOwnProperty.call(staticData, "progressOverrides")) staticData.progressOverrides = local.progressOverrides;
+        if (!Object.prototype.hasOwnProperty.call(staticData, "mailTemplate")) staticData.mailTemplate = local.mailTemplate;
         return preferNonEmptyData(staticData, window.__LEDGER_BOOTSTRAP__);
       }
     } catch {
@@ -150,9 +161,11 @@ function normalizeState(data) {
     taskOverrides: data?.taskOverrides && typeof data.taskOverrides === "object" ? data.taskOverrides : {},
     customTasks: Array.isArray(data?.customTasks) ? data.customTasks : [],
     dayPlans: Array.isArray(data?.dayPlans) ? data.dayPlans : [],
-    weekPlans: Array.isArray(data?.weekPlans) ? data.weekPlans : [],
+    weekPlans: Array.isArray(data?.weekPlans) ? data.weekPlans.map(normalizeWeekPlan) : [],
     brandRefs: Array.isArray(data?.brandRefs) ? data.brandRefs.map(normalizeBrand) : [],
     reportTemplates: data?.reportTemplates && typeof data.reportTemplates === "object" ? data.reportTemplates : {},
+    progressOverrides: data?.progressOverrides && typeof data.progressOverrides === "object" ? data.progressOverrides : {},
+    mailTemplate: data?.mailTemplate || defaultMailTemplate(),
   };
 }
 
@@ -176,14 +189,24 @@ function normalizeNote(note) {
     image: note.image || "",
     imageOwner: note.imageOwner || "design",
     copywriting: note.copywriting || "",
+    link: note.link || note.url || "",
   };
 }
 
 function normalizeBrand(brand) {
   return {
     ...brand,
-    logo: brand.logo || "",
-    logoUrl: brand.logoUrl || "",
+    logo: "",
+    logoUrl: "",
+  };
+}
+
+function normalizeWeekPlan(plan) {
+  return {
+    ...plan,
+    weekKey: plan.weekKey || weekKey(plan.createdAt ? new Date(plan.createdAt) : today),
+    text: plan.text || "",
+    done: Boolean(plan.done),
   };
 }
 
@@ -220,6 +243,20 @@ function dateValue(date) {
   return `${year}-${month}-${day}`;
 }
 
+function defaultMailTemplate() {
+  return `今日重点
+最紧急的发布、提需、审核和周报。
+
+今日必须完成
+到期任务和逾期任务。
+
+今日需催客户
+待审核、待活动信息、待确认方案。
+
+本周风险
+月中 5 篇、本月 10 篇、复盘和下月规划。`;
+}
+
 function formatDate(value) {
   const date = typeof value === "string" ? toDate(value) : value;
   if (!date) return "未填写";
@@ -230,6 +267,26 @@ function addDays(date, days) {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
   return startOfDay(next);
+}
+
+function weekStart(date) {
+  const base = startOfDay(date || today);
+  const day = base.getDay() || 7;
+  return addDays(base, 1 - day);
+}
+
+function weekEnd(date) {
+  return addDays(weekStart(date), 6);
+}
+
+function weekKey(date) {
+  return dateValue(weekStart(date || today));
+}
+
+function weekLabel(key) {
+  const start = toDate(key) || weekStart(today);
+  const end = weekEnd(start);
+  return `${String(start.getDate()).padStart(2, "0")}号-${String(end.getDate()).padStart(2, "0")}号`;
 }
 
 function diffDays(a, b) {
@@ -340,6 +397,13 @@ function monthNotes(clientId) {
 }
 
 function publishedThisMonth(clientId) {
+  const key = currentPlanMonth();
+  const override = state.progressOverrides?.[key]?.[clientId];
+  if (override !== undefined && override !== "" && !Number.isNaN(Number(override))) return Number(override);
+  return actualPublishedThisMonth(clientId);
+}
+
+function actualPublishedThisMonth(clientId) {
   return monthNotes(clientId).filter((note) => note.status === "published").length;
 }
 
@@ -616,6 +680,7 @@ function render() {
   renderReport();
   renderReportQueue();
   renderDayMonthBoard();
+  renderSettings();
 }
 
 function renderDayPlans() {
@@ -628,7 +693,10 @@ function renderDayPlans() {
   $("dayPlanList").innerHTML = html;
   $("todayPlanPreview").innerHTML = todayItems.length ? todayItems.map(dayPlanHtml).join("") : emptyHtml("今天还没有手动日计划。");
   if ($("weekPlanList")) {
-    const weekItems = state.weekPlans.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    renderWeekPlanWeekSelect();
+    const weekItems = state.weekPlans
+      .filter((item) => (item.weekKey || weekKey(today)) === selectedWeekPlanWeek)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     $("weekPlanList").innerHTML = weekItems.length ? weekItems.map(weekPlanHtml).join("") : emptyHtml("暂无手动周计划。");
   }
 }
@@ -648,6 +716,22 @@ function renderDayPlanDateSelect() {
     .map((date) => `<option value="${date}" ${date === selectedDayPlanDate ? "selected" : ""}>${date === dateValue(today) ? "今天 " : ""}${formatDate(date)}</option>`)
     .join("");
   select.innerHTML = options;
+}
+
+function weekPlanWeeks() {
+  const weeks = new Set(state.weekPlans.map((item) => item.weekKey || weekKey(today)).filter(Boolean));
+  weeks.add(weekKey(today));
+  if (selectedWeekPlanWeek) weeks.add(selectedWeekPlanWeek);
+  return [...weeks].sort().reverse();
+}
+
+function renderWeekPlanWeekSelect() {
+  const select = $("weekPlanWeekSelect");
+  if (!select) return;
+  if (!selectedWeekPlanWeek) selectedWeekPlanWeek = weekKey(today);
+  select.innerHTML = weekPlanWeeks()
+    .map((key) => `<option value="${key}" ${key === selectedWeekPlanWeek ? "selected" : ""}>${key === weekKey(today) ? "本周 " : ""}${weekLabel(key)}</option>`)
+    .join("");
 }
 
 function dayPlanHtml(item, index = 0) {
@@ -779,6 +863,7 @@ function progressHtml(client) {
   const target = Number(client.target || 10);
   const planned = plannedThisMonth(client.id);
   const published = publishedThisMonth(client.id);
+  const actualPublished = actualPublishedThisMonth(client.id);
   const percent = Math.min(100, Math.round((published / target) * 100));
   return `
     <article class="progress-item">
@@ -786,6 +871,14 @@ function progressHtml(client) {
         <strong>${escapeHtml(client.name)}</strong>
         <span class="tag ${published >= 5 ? "green" : "yellow"}">已发 ${published}/${target}</span>
       </div>
+      ${progressEditMode ? `
+        <div class="progress-edit-row">
+          <label>手动已发
+            <input type="number" min="0" max="99" data-progress-client="${client.id}" value="${published}" />
+          </label>
+          <button class="ghost-btn mini-action" type="button" data-progress-reset="${client.id}">恢复自动 ${actualPublished}</button>
+        </div>
+      ` : ""}
       <div class="bar green-bar"><span style="width:${percent}%"></span></div>
       <p>本月已排 ${planned} 篇。${monthSummary(client.id, currentPlanMonth())}</p>
     </article>
@@ -867,10 +960,7 @@ function renderClientDetail(clientId = selectedClientId) {
       <div class="section-head">
         <h4>${monthLabel(month)}笔记规划 <span class="tag">${notes.length} 篇</span></h4>
         <div class="panel-actions">
-          <button class="ghost-btn mini-action" type="button" data-client-import>批量导入解析</button>
-          <button class="ghost-btn mini-action" type="button" data-client-import-undo>撤销导入</button>
           <button class="ghost-btn mini-action" type="button" data-client-plan-edit>${clientDetailEditMode ? "退出编辑" : "编辑"}</button>
-          <input id="clientImportFile" type="file" accept=".txt,.csv,.xlsx,.xls,.doc,.docx,.md" hidden />
         </div>
       </div>
       <div class="mini-note-list detail-note-list">${notes.length ? notes.map((note) => (clientDetailEditMode ? detailNoteEditHtml(note) : miniNoteHtml(note))).join("") : emptyHtml("暂无该月规划。")}</div>
@@ -1149,7 +1239,7 @@ function noteProgressOverviewHtml(baseNotes, visibleNotes, monthFilter) {
   const remaining = baseNotes.filter((note) => note.status !== "published").length;
   const waitingCopy = baseNotes.filter((note) => note.status === "copy").length;
   const waitingDesign = baseNotes.filter((note) => note.status === "design").length;
-  const label = monthFilter === "all" ? "全部月份" : monthLabel(monthFilter);
+  const label = monthFilter === "all" ? "全部笔记" : `${monthLabel(monthFilter)}全部笔记`;
   const clientCards = state.clients
     .map((client) => {
       const rows = baseNotes.filter((note) => note.clientId === client.id && note.planKind !== "backup");
@@ -1169,9 +1259,9 @@ function noteProgressOverviewHtml(baseNotes, visibleNotes, monthFilter) {
     .filter(Boolean)
     .join("");
   return `
-    <article class="progress-pill clickable-pill" data-note-filter="all"><span>${label}当前展示</span><strong>${total}</strong></article>
+    <article class="progress-pill clickable-pill" data-note-filter="all"><span>${label}</span><strong>${total}</strong></article>
     <article class="progress-pill clickable-pill" data-note-filter="published"><span>已发布</span><strong>${published}</strong></article>
-    <article class="progress-pill clickable-pill" data-note-filter="unpublished"><span>剩余未发布</span><strong>${remaining}</strong></article>
+    <article class="progress-pill clickable-pill" data-note-filter="unpublished"><span>未发布</span><strong>${remaining}</strong></article>
     <article class="progress-pill clickable-pill" data-note-filter="copy"><span>待文案</span><strong>${waitingCopy}</strong></article>
     <article class="progress-pill clickable-pill" data-note-filter="design"><span>待设计</span><strong>${waitingDesign}</strong></article>
     ${clientCards}
@@ -1198,6 +1288,10 @@ function noteHtml(note) {
       ${note.image ? `<img class="note-thumb" src="${escapeHtml(note.image)}" alt="参考图片" />` : ""}
       <p>${note.angle ? escapeHtml(note.angle) : "暂无卖点记录。"}</p>
       ${note.copywriting ? `<p><strong>文案：</strong>${escapeHtml(note.copywriting)}</p>` : ""}
+      <div class="note-link-row">
+        <input data-note-link="${note.id}" value="${escapeHtml(note.link || "")}" placeholder="填写已发布笔记链接" />
+        ${note.link ? `<a class="ghost-btn mini-action" href="${escapeHtml(note.link)}" target="_blank" rel="noopener noreferrer">打开链接</a>` : ""}
+      </div>
     </article>
   `;
 }
@@ -1241,16 +1335,23 @@ function renderBrands() {
     : emptyHtml("还没有品牌参考，先把常看的对标账号放进来。");
 }
 
+function renderSettings() {
+  const select = $("globalImportClient");
+  if (select) {
+    const current = select.value;
+    select.innerHTML = state.clients
+      .map((client) => `<option value="${client.id}">${escapeHtml(client.name)}</option>`)
+      .join("");
+    if (current && state.clients.some((client) => client.id === current)) select.value = current;
+  }
+  const editor = $("mailTemplateEditor");
+  if (editor && document.activeElement !== editor) editor.value = state.mailTemplate || defaultMailTemplate();
+}
+
 function brandHtml(brand) {
   const active = $("brandId")?.value === brand.id;
-  const logo = brand.logo || brand.logoUrl || autoLogoUrl(brand.url);
-  const initial = (brand.name || "品").slice(0, 1);
   return `
     <article class="brand-item ${active ? "active" : ""}" data-brand-id="${brand.id}">
-      <div class="brand-logo">
-        ${logo ? `<img src="${escapeHtml(logo)}" alt="${escapeHtml(brand.name)}Logo" />` : ""}
-        <span>${escapeHtml(initial)}</span>
-      </div>
       <div class="brand-copy">
         <strong>${escapeHtml(brand.name)}</strong>
         <a href="${escapeHtml(brand.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(brand.url)}">${escapeHtml(shortUrl(brand.url))}</a>
@@ -1263,19 +1364,17 @@ function fillBrandForm(brand = null) {
   $("brandId").value = brand?.id || "";
   $("brandName").value = brand?.name || "";
   $("brandUrl").value = brand?.url || "";
-  setBrandLogoPreview(brand?.logo || brand?.logoUrl || autoLogoUrl(brand?.url || ""), brand?.name || "");
   renderBrands();
 }
 
 function collectBrandForm() {
   const url = $("brandUrl").value.trim();
-  const logo = $("brandLogoPreview").dataset.logo || "";
   return {
     id: $("brandId").value || uid("brand"),
     name: $("brandName").value.trim(),
     url,
-    logo,
-    logoUrl: logo || autoLogoUrl(url),
+    logo: "",
+    logoUrl: "",
     updatedAt: new Date().toISOString(),
   };
 }
@@ -1366,6 +1465,19 @@ function importPlanningForClient(clientId, text, fileName = "") {
   showToast(`导入成功，共拆解 ${newNotes.length} 条笔记，${parsed.positioning ? "已更新账号定位" : "未识别账号定位"}`);
 }
 
+async function handleGlobalPlanningImport(file) {
+  const clientId = $("globalImportClient")?.value;
+  if (!clientId) return showToast("请先选择归属客户");
+  const ext = file.name.split(".").pop().toLowerCase();
+  if (["doc", "docx", "xls", "xlsx"].includes(ext)) {
+    showToast("当前浏览器版暂不直接解析Word/Excel，请先另存为TXT再上传");
+    return;
+  }
+  const text = await file.text();
+  importPlanningForClient(clientId, text, file.name);
+  renderSettings();
+}
+
 function undoLastClientImport() {
   if (!lastClientImport) return showToast("暂无可撤销的导入");
   const client = clientById(lastClientImport.clientId);
@@ -1382,40 +1494,6 @@ function shortUrl(url) {
   const text = String(url || "");
   if (text.length <= 34) return text || "未填写链接";
   return `${text.slice(0, 18)}...${text.slice(-12)}`;
-}
-
-function domainFromUrl(url) {
-  try {
-    const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);
-    return parsed.hostname.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
-}
-
-function autoLogoUrl(url) {
-  const domain = domainFromUrl(url || "");
-  return domain ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128` : "";
-}
-
-async function fetchBrandLogo(name, url) {
-  try {
-    const params = new URLSearchParams({ name: name || "", url: url || "" });
-    const response = await fetch(`${API_BASE}/api/logo?${params.toString()}`);
-    if (!response.ok) throw new Error("logo api unavailable");
-    const data = await response.json();
-    return data.logo || autoLogoUrl(url);
-  } catch {
-    return autoLogoUrl(url);
-  }
-}
-
-function setBrandLogoPreview(image, name) {
-  const box = $("brandLogoPreview");
-  if (!box) return;
-  const initial = (name || $("brandName")?.value || "品").slice(0, 1);
-  box.dataset.logo = image || "";
-  box.innerHTML = image ? `<img src="${escapeHtml(image)}" alt="Logo预览" />` : `<span>${escapeHtml(initial)}</span>`;
 }
 
 function designDueDate(note) {
@@ -1963,11 +2041,13 @@ function copyDayPlanText() {
 }
 
 function copyWeekPlanText() {
-  const items = state.weekPlans.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const items = state.weekPlans
+    .filter((item) => (item.weekKey || weekKey(today)) === selectedWeekPlanWeek)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const text = items.length
     ? items.map((item, index) => `${index + 1}. ${item.done ? "[已完成] " : ""}${item.text}`).join("\n")
     : "周计划暂无任务。";
-  copyText(`【周计划】\n${text}`);
+  copyText(`【周计划】${weekLabel(selectedWeekPlanWeek)}\n${text}`);
   showToast("已复制全部周计划内容");
 }
 
@@ -2000,6 +2080,18 @@ function updateNoteField(noteId, field, value) {
   renderTypes();
   showToast("已保存");
   return true;
+}
+
+function handleNoteLinkChange(event) {
+  const input = event.target.closest("[data-note-link]");
+  if (!input) return;
+  const note = state.notes.find((entry) => entry.id === input.dataset.noteLink);
+  if (!note) return;
+  note.link = input.value.trim();
+  saveState();
+  renderNotes();
+  renderTypes();
+  showToast("笔记链接已保存");
 }
 
 function switchView(viewId) {
@@ -2064,7 +2156,9 @@ function reorderDayPlans(targetId, position = "before") {
 
 function reorderWeekPlans(targetId, position = "before") {
   if (!draggingWeekPlanId) return;
-  const items = state.weekPlans.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const items = state.weekPlans
+    .filter((item) => (item.weekKey || weekKey(today)) === selectedWeekPlanWeek)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const from = items.findIndex((item) => item.id === draggingWeekPlanId);
   if (from < 0) return;
   const [moved] = items.splice(from, 1);
@@ -2075,7 +2169,6 @@ function reorderWeekPlans(targetId, position = "before") {
   items.forEach((item, index) => {
     item.order = index;
   });
-  state.weekPlans = items;
   saveState();
   renderDayPlans();
   showToast("周计划排序已保存");
@@ -2339,6 +2432,33 @@ $("dayPlanDateSelect").addEventListener("change", () => {
   showToast(`已切换到 ${formatDate(selectedDayPlanDate)} 今日清单`);
 });
 
+$("toggleProgressEdit").addEventListener("click", () => {
+  progressEditMode = !progressEditMode;
+  $("toggleProgressEdit").textContent = progressEditMode ? "完成" : "编辑";
+  renderDashboard();
+});
+
+$("clientProgress").addEventListener("change", (event) => {
+  const input = event.target.closest("[data-progress-client]");
+  if (!input) return;
+  const month = currentPlanMonth();
+  state.progressOverrides[month] = state.progressOverrides[month] || {};
+  state.progressOverrides[month][input.dataset.progressClient] = Math.max(0, Number(input.value || 0));
+  saveState();
+  renderDashboard();
+  showToast("客户进度已保存");
+});
+
+$("clientProgress").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-progress-reset]");
+  if (!button) return;
+  const month = currentPlanMonth();
+  if (state.progressOverrides[month]) delete state.progressOverrides[month][button.dataset.progressReset];
+  saveState();
+  renderDashboard();
+  showToast("已恢复自动统计");
+});
+
 ["dayPlanList", "todayPlanPreview"].forEach((id) => {
   $(id).addEventListener("click", handleDayPlanClick);
   $(id).addEventListener("change", handleDayPlanChange);
@@ -2367,13 +2487,20 @@ $("weekPlanForm").addEventListener("submit", (event) => {
     id: uid("week_plan"),
     text,
     done: false,
-    order: state.weekPlans.length,
+    weekKey: selectedWeekPlanWeek,
+    order: state.weekPlans.filter((item) => (item.weekKey || weekKey(today)) === selectedWeekPlanWeek).length,
     createdAt: new Date().toISOString(),
   });
   $("weekPlanText").value = "";
   saveState();
   renderDayPlans();
   showToast("周计划已添加");
+});
+
+$("weekPlanWeekSelect").addEventListener("change", () => {
+  selectedWeekPlanWeek = $("weekPlanWeekSelect").value || weekKey(today);
+  renderDayPlans();
+  showToast(`已切换到 ${weekLabel(selectedWeekPlanWeek)} 周计划`);
 });
 
 $("weekPlanList").addEventListener("change", (event) => {
@@ -2838,6 +2965,7 @@ $("designClientFilter").addEventListener("change", renderDesignRequests);
 $("designMonthFilter").addEventListener("change", renderDesignRequests);
 $("typeTagFilter").addEventListener("change", renderTypes);
 $("typeClientFilter").addEventListener("change", renderTypes);
+$("typeHistoryList").addEventListener("change", handleNoteLinkChange);
 $("noteFilterClient").addEventListener("change", renderNotes);
 $("noteFilterMonth").addEventListener("change", renderNotes);
 $("noteFilterKind").addEventListener("change", renderNotes);
@@ -2852,6 +2980,7 @@ $("noteFilterTag").addEventListener("change", () => {
   selectedTag = $("noteFilterTag").value;
   renderNotes();
 });
+$("noteList").addEventListener("change", handleNoteLinkChange);
 $("dayCalendarJump").addEventListener("click", () => {
   $("dayCalendarSection").scrollIntoView({ behavior: "smooth", block: "start" });
 });
@@ -2945,31 +3074,6 @@ $("resetBrandForm").addEventListener("click", () => fillBrandForm());
 
 $("brandSearch").addEventListener("input", renderBrands);
 
-$("brandName").addEventListener("input", () => {
-  if (!$("brandLogoPreview").dataset.logo) setBrandLogoPreview("", $("brandName").value);
-});
-
-$("brandUrl").addEventListener("change", async () => {
-  if (!$("brandLogoPreview").dataset.logo) {
-    const logo = await fetchBrandLogo($("brandName").value, $("brandUrl").value);
-    setBrandLogoPreview(logo, $("brandName").value);
-  }
-});
-
-$("autoBrandLogo").addEventListener("click", async () => {
-  const logo = await fetchBrandLogo($("brandName").value, $("brandUrl").value);
-  if (!logo) return showToast("请先填写品牌主页链接");
-  setBrandLogoPreview(logo, $("brandName").value);
-  showToast("已尝试自动获取Logo");
-});
-
-$("brandLogoFile").addEventListener("change", async (event) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-  const image = await readImageFile(file);
-  setBrandLogoPreview(image, $("brandName").value);
-});
-
 $("deleteBrand").addEventListener("click", () => {
   const id = $("brandId").value;
   if (!id) return showToast("请选择品牌参考");
@@ -2984,6 +3088,18 @@ $("copyToday").addEventListener("click", () => copyText(todayTextForCopy()));
 $("copyDayPlans").addEventListener("click", copyDayPlanText);
 $("copyWeekPlans").addEventListener("click", copyWeekPlanText);
 $("copyReport").addEventListener("click", () => copyText($("reportPreview").textContent));
+$("saveMailTemplate").addEventListener("click", () => {
+  state.mailTemplate = $("mailTemplateEditor").value.trim() || defaultMailTemplate();
+  saveState();
+  showToast("每日邮件结构已保存");
+});
+
+$("globalPlanningImport").addEventListener("change", async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  await handleGlobalPlanningImport(file);
+  event.target.value = "";
+});
 $("copyMonthlyReport").addEventListener("click", () => copyText($("monthlyReportPreview").textContent));
 
 document.querySelectorAll(".report-tab").forEach((button) => {
@@ -3116,6 +3232,8 @@ $("clearAll").addEventListener("click", () => {
   state.weekPlans = [];
   state.brandRefs = [];
   state.reportTemplates = {};
+  state.progressOverrides = {};
+  state.mailTemplate = defaultMailTemplate();
   saveState();
   fillClientForm();
   fillNoteForm();

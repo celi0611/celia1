@@ -16,7 +16,6 @@
           <p id="todayText"></p>
         </div>
       </div>
-      <div id="storageStatus" class="storage-status">正在连接数据</div>
       <nav class="nav" aria-label="页面导航">
         <button class="nav-btn active" data-view="dashboard">今日</button>
         <button class="nav-btn" data-view="dayplan">日/周计划</button>
@@ -49,7 +48,10 @@
         <section class="panel progress-top-panel">
           <div class="panel-title">
             <h3>客户进度</h3>
-            <span>月中前尽量完成 5 篇</span>
+            <div class="panel-actions">
+              <span>月中前尽量完成 5 篇</span>
+              <button id="toggleProgressEdit" class="ghost-btn mini-action" type="button">编辑</button>
+            </div>
           </div>
           <div id="clientProgress" class="progress-list"></div>
         </section>
@@ -178,7 +180,10 @@
             <div>
               <div class="panel-title">
                 <h3>周计划</h3>
-                <button id="copyWeekPlans" class="ghost-btn mini-action" type="button">复制全部</button>
+                <div class="panel-actions">
+                  <button id="copyWeekPlans" class="ghost-btn mini-action" type="button">复制全部</button>
+                  <select id="weekPlanWeekSelect"></select>
+                </div>
               </div>
               <div id="weekPlanList" class="day-plan-list"></div>
               <form id="weekPlanForm" class="inline-form bottom-add-form">
@@ -552,16 +557,6 @@
               小红书主页链接
               <input id="brandUrl" placeholder="粘贴小红书主页链接" required />
             </label>
-            <div class="brand-logo-editor">
-              <div id="brandLogoPreview" class="brand-logo-preview">品</div>
-              <div class="form-actions">
-                <button id="autoBrandLogo" class="ghost-btn" type="button">自动获取Logo</button>
-                <label class="ghost-btn file-btn">
-                  上传Logo
-                  <input id="brandLogoFile" type="file" accept="image/*" />
-                </label>
-              </div>
-            </div>
             <div class="form-actions">
               <button class="primary-btn" type="submit">保存品牌</button>
               <button id="deleteBrand" class="danger-btn" type="button">删除</button>
@@ -682,17 +677,43 @@
           </div>
         </div>
         <section class="panel settings-panel">
-          <h3>每日邮件建议结构</h3>
-          <div class="mail-template">
-            <strong>今日重点</strong>
-            <span>最紧急的发布、提需、审核和周报。</span>
-            <strong>今日必须完成</strong>
-            <span>到期任务和逾期任务。</span>
-            <strong>今日需催客户</strong>
-            <span>待审核、待活动信息、待确认方案。</span>
-            <strong>本周风险</strong>
-            <span>月中 5 篇、本月 10 篇、复盘和下月规划。</span>
+          <div class="panel-title">
+            <h3>数据库状态</h3>
+            <span>确认当前是否为云端同步</span>
           </div>
+          <div id="storageStatus" class="storage-status">正在连接数据</div>
+        </section>
+        <section class="panel settings-panel">
+          <div class="panel-title">
+            <h3>文档上传解析</h3>
+            <span>上传账号定位方案或月度规划</span>
+          </div>
+          <div class="form-row">
+            <label>
+              归属客户
+              <select id="globalImportClient"></select>
+            </label>
+            <label>
+              文档类型
+              <select id="globalImportType">
+                <option value="planning">账号定位 + 阅读规划</option>
+                <option value="positioning">账号定位方案</option>
+                <option value="monthly">客户月度规划</option>
+              </select>
+            </label>
+          </div>
+          <label class="ghost-btn file-btn">
+            上传并解析文档
+            <input id="globalPlanningImport" type="file" accept=".txt,.md,.csv,.doc,.docx,.xls,.xlsx" />
+          </label>
+          <p class="helper-text">建议先上传 TXT/MD/CSV；Word/Excel 若浏览器无法直接读取，会提示你另存为 TXT 后再导入。</p>
+        </section>
+        <section class="panel settings-panel">
+          <div class="panel-title">
+            <h3>每日邮件建议结构</h3>
+            <button id="saveMailTemplate" class="ghost-btn mini-action" type="button">保存结构</button>
+          </div>
+          <textarea id="mailTemplateEditor" class="mail-template-editor" rows="10"></textarea>
           <button id="seedDemo" class="ghost-btn">填入示例数据</button>
           <button id="clearAll" class="danger-btn">清空全部数据</button>
         </section>
