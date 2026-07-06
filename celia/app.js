@@ -1,7 +1,8 @@
 const STORAGE_KEY = "xhs-ledger-v2";
+const UI_STORAGE_KEY = "xhs-ledger-ui-v1";
 const API_BASE = "";
 
-let state = { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], reportTemplates: {}, progressOverrides: {}, mailTemplate: "" };
+let state = { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], toolRefs: [], reportTemplates: {}, progressOverrides: {}, plannedOverrides: {}, dashboardMetricOverrides: {}, mailTemplate: "" };
 let backendOnline = false;
 let backendMode = "local";
 let selectedClientId = "";
@@ -18,6 +19,8 @@ let draggingTaskId = "";
 let editingDetailNoteId = "";
 let lastClientImport = null;
 let progressEditMode = false;
+let editingTaskId = "";
+let uiState = { sidebarCollapsed: false, navGroups: { content: true, client: true, report: true } };
 
 const $ = (id) => document.getElementById(id);
 const today = startOfDay(new Date());
@@ -27,13 +30,49 @@ selectedDayPlanDate = dateValue(today);
 selectedWeekPlanWeek = weekKey(today);
 
 function emptyState() {
-  return { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], reportTemplates: {}, progressOverrides: {}, mailTemplate: defaultMailTemplate() };
+  return { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], toolRefs: [], reportTemplates: {}, progressOverrides: {}, plannedOverrides: {}, dashboardMetricOverrides: {}, mailTemplate: defaultMailTemplate() };
 }
 
 function bootstrapState() {
   return window.__LEDGER_BOOTSTRAP__ && typeof window.__LEDGER_BOOTSTRAP__ === "object"
     ? normalizeState(window.__LEDGER_BOOTSTRAP__)
     : emptyState();
+}
+
+function loadUiState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(UI_STORAGE_KEY) || "{}");
+    uiState = {
+      sidebarCollapsed: Boolean(saved.sidebarCollapsed),
+      navGroups: {
+        content: saved.navGroups?.content !== false,
+        client: saved.navGroups?.client !== false,
+        report: saved.navGroups?.report !== false,
+      },
+    };
+  } catch {
+    uiState = { sidebarCollapsed: false, navGroups: { content: true, client: true, report: true } };
+  }
+}
+
+function saveUiState() {
+  localStorage.setItem(UI_STORAGE_KEY, JSON.stringify(uiState));
+}
+
+function applyUiState() {
+  document.body.classList.toggle("sidebar-collapsed", uiState.sidebarCollapsed);
+  document.querySelectorAll("[data-nav-group]").forEach((group) => {
+    const key = group.dataset.navGroup;
+    group.classList.toggle("collapsed", uiState.navGroups[key] === false);
+  });
+  const edge = $("sidebarEdgeToggle");
+  if (edge) edge.textContent = uiState.sidebarCollapsed ? "›" : "‹";
+}
+
+function toggleSidebar() {
+  uiState.sidebarCollapsed = !uiState.sidebarCollapsed;
+  saveUiState();
+  applyUiState();
 }
 
 function preferNonEmptyData(primary, fallback) {
@@ -45,11 +84,14 @@ function preferNonEmptyData(primary, fallback) {
       dayPlans: normalizedPrimary.dayPlans.length ? normalizedPrimary.dayPlans : normalizedFallback.dayPlans,
       weekPlans: normalizedPrimary.weekPlans.length ? normalizedPrimary.weekPlans : normalizedFallback.weekPlans,
       brandRefs: normalizedPrimary.brandRefs.length ? normalizedPrimary.brandRefs : normalizedFallback.brandRefs,
+      toolRefs: normalizedPrimary.toolRefs.length ? normalizedPrimary.toolRefs : normalizedFallback.toolRefs,
       calendarTasks: normalizedPrimary.calendarTasks.length ? normalizedPrimary.calendarTasks : normalizedFallback.calendarTasks,
       taskActions: Object.keys(normalizedPrimary.taskActions).length ? normalizedPrimary.taskActions : normalizedFallback.taskActions,
       taskOverrides: Object.keys(normalizedPrimary.taskOverrides).length ? normalizedPrimary.taskOverrides : normalizedFallback.taskOverrides,
       reportTemplates: Object.keys(normalizedPrimary.reportTemplates).length ? normalizedPrimary.reportTemplates : normalizedFallback.reportTemplates,
       progressOverrides: Object.keys(normalizedPrimary.progressOverrides).length ? normalizedPrimary.progressOverrides : normalizedFallback.progressOverrides,
+      plannedOverrides: Object.keys(normalizedPrimary.plannedOverrides).length ? normalizedPrimary.plannedOverrides : normalizedFallback.plannedOverrides,
+      dashboardMetricOverrides: Object.keys(normalizedPrimary.dashboardMetricOverrides).length ? normalizedPrimary.dashboardMetricOverrides : normalizedFallback.dashboardMetricOverrides,
       mailTemplate: normalizedPrimary.mailTemplate || normalizedFallback.mailTemplate,
     };
   }
@@ -72,8 +114,11 @@ function loadLocalState() {
       dayPlans: Array.isArray(parsed.dayPlans) ? parsed.dayPlans : [],
       weekPlans: Array.isArray(parsed.weekPlans) ? parsed.weekPlans : [],
       brandRefs: Array.isArray(parsed.brandRefs) ? parsed.brandRefs.map(normalizeBrand) : [],
+      toolRefs: Array.isArray(parsed.toolRefs) ? parsed.toolRefs.map(normalizeTool) : [],
       reportTemplates: parsed.reportTemplates && typeof parsed.reportTemplates === "object" ? parsed.reportTemplates : {},
       progressOverrides: parsed.progressOverrides && typeof parsed.progressOverrides === "object" ? parsed.progressOverrides : {},
+      plannedOverrides: parsed.plannedOverrides && typeof parsed.plannedOverrides === "object" ? parsed.plannedOverrides : {},
+      dashboardMetricOverrides: parsed.dashboardMetricOverrides && typeof parsed.dashboardMetricOverrides === "object" ? parsed.dashboardMetricOverrides : {},
       mailTemplate: parsed.mailTemplate || defaultMailTemplate(),
     };
   } catch {
@@ -89,6 +134,7 @@ async function loadState() {
     const local = loadLocalState();
     if (!Object.prototype.hasOwnProperty.call(data, "weekPlans")) data.weekPlans = local.weekPlans;
     if (!Object.prototype.hasOwnProperty.call(data, "brandRefs")) data.brandRefs = local.brandRefs;
+    if (!Object.prototype.hasOwnProperty.call(data, "toolRefs")) data.toolRefs = local.toolRefs;
     if (!Object.prototype.hasOwnProperty.call(data, "progressOverrides")) data.progressOverrides = local.progressOverrides;
     if (!Object.prototype.hasOwnProperty.call(data, "mailTemplate")) data.mailTemplate = local.mailTemplate;
     backendOnline = true;
@@ -104,6 +150,7 @@ async function loadState() {
         const local = loadLocalState();
         if (!Object.prototype.hasOwnProperty.call(staticData, "weekPlans")) staticData.weekPlans = local.weekPlans;
         if (!Object.prototype.hasOwnProperty.call(staticData, "brandRefs")) staticData.brandRefs = local.brandRefs;
+        if (!Object.prototype.hasOwnProperty.call(staticData, "toolRefs")) staticData.toolRefs = local.toolRefs;
         if (!Object.prototype.hasOwnProperty.call(staticData, "progressOverrides")) staticData.progressOverrides = local.progressOverrides;
         if (!Object.prototype.hasOwnProperty.call(staticData, "mailTemplate")) staticData.mailTemplate = local.mailTemplate;
         return preferNonEmptyData(staticData, window.__LEDGER_BOOTSTRAP__);
@@ -163,8 +210,11 @@ function normalizeState(data) {
     dayPlans: Array.isArray(data?.dayPlans) ? data.dayPlans : [],
     weekPlans: Array.isArray(data?.weekPlans) ? data.weekPlans.map(normalizeWeekPlan) : [],
     brandRefs: Array.isArray(data?.brandRefs) ? data.brandRefs.map(normalizeBrand) : [],
+    toolRefs: Array.isArray(data?.toolRefs) ? data.toolRefs.map(normalizeTool) : [],
     reportTemplates: data?.reportTemplates && typeof data.reportTemplates === "object" ? data.reportTemplates : {},
     progressOverrides: data?.progressOverrides && typeof data.progressOverrides === "object" ? data.progressOverrides : {},
+    plannedOverrides: data?.plannedOverrides && typeof data.plannedOverrides === "object" ? data.plannedOverrides : {},
+    dashboardMetricOverrides: data?.dashboardMetricOverrides && typeof data.dashboardMetricOverrides === "object" ? data.dashboardMetricOverrides : {},
     mailTemplate: data?.mailTemplate || defaultMailTemplate(),
   };
 }
@@ -198,6 +248,15 @@ function normalizeBrand(brand) {
     ...brand,
     logo: "",
     logoUrl: "",
+  };
+}
+
+function normalizeTool(tool) {
+  return {
+    id: tool.id || uid("tool"),
+    title: tool.title || tool.name || "",
+    url: tool.url || "",
+    updatedAt: tool.updatedAt || "",
   };
 }
 
@@ -408,7 +467,36 @@ function actualPublishedThisMonth(clientId) {
 }
 
 function plannedThisMonth(clientId) {
+  const key = currentPlanMonth();
+  const override = state.plannedOverrides?.[key]?.[clientId];
+  if (override !== undefined && override !== "" && !Number.isNaN(Number(override))) return Number(override);
+  return actualPlannedThisMonth(clientId);
+}
+
+function actualPlannedThisMonth(clientId) {
   return monthNotes(clientId).length;
+}
+
+function nonNegativeInteger(value) {
+  const text = String(value ?? "").trim();
+  if (!/^\d+$/.test(text)) return null;
+  return Number(text);
+}
+
+function requireNonNegativeInteger(value, message = "只能输入非负整数") {
+  const parsed = nonNegativeInteger(value);
+  if (parsed === null) {
+    alert(message);
+    return null;
+  }
+  return parsed;
+}
+
+function dashboardMetricValue(key, autoValue) {
+  const month = currentPlanMonth();
+  const override = state.dashboardMetricOverrides?.[month]?.[key];
+  if (override !== undefined && override !== "" && !Number.isNaN(Number(override))) return Number(override);
+  return autoValue;
 }
 
 function nextCycleDate(client) {
@@ -613,17 +701,18 @@ function buildTasks() {
   const manualTasks = state.customTasks.map((task) => ({
     level: task.bucket === "ui" ? "high" : task.bucket === "un" ? "medium" : "low",
     title: task.title,
-    detail: task.detail || `${task.scope === "week" ? "周计划" : "日计划"}｜手动添加`,
-    tags: task.tags?.length ? task.tags : [bucketText(task.bucket), task.scope === "week" ? "周计划" : "日计划"],
+    detail: task.detail || `${task.scope === "week" ? "周计划" : task.scope === "risk" ? "风险提醒" : "日计划"}｜手动添加`,
+    tags: task.tags?.length ? task.tags : [bucketText(task.bucket), task.scope === "week" ? "周计划" : task.scope === "risk" ? "风险提醒" : "日计划"],
     manualId: task.id,
     bucket: task.bucket,
+    scope: task.scope,
     date: task.createdAt?.slice(0, 10) || dateValue(today),
     order: task.order ?? 0,
   }));
 
   return {
-    tasks: sortTasks([...tasks, ...manualTasks].map(applyTaskOverride)),
-    risks: sortTasks(risks.map(applyTaskOverride)),
+    tasks: sortTasks([...tasks, ...manualTasks.filter((task) => task.scope !== "risk")].map(applyTaskOverride)),
+    risks: sortTasks([...risks, ...manualTasks.filter((task) => task.scope === "risk")].map(applyTaskOverride)),
   };
 }
 
@@ -673,10 +762,10 @@ function render() {
   renderClients();
   renderClientDetail();
   renderPlans();
-  renderDesignRequests();
   renderNotes();
   renderTypes();
   renderBrands();
+  renderTools();
   renderReport();
   renderReportQueue();
   renderDayMonthBoard();
@@ -723,6 +812,7 @@ function renderDayWeekSummary(dayItems = [], weekItems = []) {
 function dayPlanDates() {
   const dates = new Set(state.dayPlans.map((item) => item.date).filter(Boolean));
   dates.add(dateValue(today));
+  dates.add(dateValue(addDays(today, 1)));
   if (selectedDayPlanDate) dates.add(selectedDayPlanDate);
   return [...dates].sort().reverse();
 }
@@ -732,7 +822,7 @@ function renderDayPlanDateSelect() {
   if (!select) return;
   if (!selectedDayPlanDate) selectedDayPlanDate = dateValue(today);
   const options = dayPlanDates()
-    .map((date) => `<option value="${date}" ${date === selectedDayPlanDate ? "selected" : ""}>${date === dateValue(today) ? "今天 " : ""}${formatDate(date)}</option>`)
+    .map((date) => `<option value="${date}" ${date === selectedDayPlanDate ? "selected" : ""}>${date === dateValue(today) ? "今天 " : date === dateValue(addDays(today, 1)) ? "明天 " : ""}${formatDate(date)}</option>`)
     .join("");
   select.innerHTML = options;
 }
@@ -793,10 +883,10 @@ function renderDashboard() {
     return date && date >= today && date <= weekEnd && note.status !== "published" && note.planKind !== "backup";
   }).length;
 
-  $("metricClients").textContent = activeClients.length;
-  $("metricPublished").textContent = monthPublished;
-  $("metricReview").textContent = reviewCount;
-  $("metricWeek").textContent = weekCount;
+  $("metricClients").textContent = dashboardMetricValue("clients", activeClients.length);
+  $("metricPublished").textContent = dashboardMetricValue("published", monthPublished);
+  $("metricReview").textContent = dashboardMetricValue("review", reviewCount);
+  $("metricWeek").textContent = dashboardMetricValue("week", weekCount);
 
   const { tasks, risks } = buildTasks();
   const visibility = $("taskVisibilityFilter").value || "active";
@@ -839,7 +929,7 @@ function quadrantHtml(tasks, risks) {
         <section class="quadrant" data-quadrant="${bucket.key}">
           <div class="quadrant-head">
             <h4>${bucket.title} <span class="tag">${bucket.items.length} 项</span></h4>
-            <button class="ghost-btn mini-action" type="button" data-quadrant-edit="${escapeHtml(bucket.title)}">编辑</button>
+            <button class="ghost-btn mini-action" type="button" data-quadrant-edit="${escapeHtml(bucket.title)}">新增</button>
           </div>
           ${bucket.items.length ? bucket.items.slice(0, 8).map((task, index) => taskHtml(task, index)).join("") : emptyHtml("暂无")}
         </section>
@@ -883,6 +973,7 @@ function progressHtml(client) {
   const planned = plannedThisMonth(client.id);
   const published = publishedThisMonth(client.id);
   const actualPublished = actualPublishedThisMonth(client.id);
+  const actualPlanned = actualPlannedThisMonth(client.id);
   const percent = Math.min(100, Math.round((published / target) * 100));
   return `
     <article class="progress-item">
@@ -895,7 +986,11 @@ function progressHtml(client) {
           <label>手动已发
             <input type="number" min="0" max="99" data-progress-client="${client.id}" value="${published}" />
           </label>
+          <label>本月已排
+            <input type="number" min="0" max="99" data-planned-client="${client.id}" value="${planned}" />
+          </label>
           <button class="ghost-btn mini-action" type="button" data-progress-reset="${client.id}">恢复自动 ${actualPublished}</button>
+          <button class="ghost-btn mini-action" type="button" data-planned-reset="${client.id}">恢复已排 ${actualPlanned}</button>
         </div>
       ` : ""}
       <div class="bar green-bar"><span style="width:${percent}%"></span></div>
@@ -1286,8 +1381,6 @@ function noteProgressOverviewHtml(baseNotes, visibleNotes, monthFilter) {
   const total = visibleNotes.length;
   const published = baseNotes.filter((note) => note.status === "published").length;
   const remaining = baseNotes.filter((note) => note.status !== "published").length;
-  const waitingCopy = baseNotes.filter((note) => note.status === "copy").length;
-  const waitingDesign = baseNotes.filter((note) => note.status === "design").length;
   const label = monthFilter === "all" ? "全部笔记" : `${monthLabel(monthFilter)}全部笔记`;
   const clientCards = state.clients
     .map((client) => {
@@ -1311,8 +1404,6 @@ function noteProgressOverviewHtml(baseNotes, visibleNotes, monthFilter) {
     <article class="progress-pill clickable-pill" data-note-filter="all"><span>${label}</span><strong>${total}</strong></article>
     <article class="progress-pill clickable-pill" data-note-filter="published"><span>已发布</span><strong>${published}</strong></article>
     <article class="progress-pill clickable-pill" data-note-filter="unpublished"><span>未发布</span><strong>${remaining}</strong></article>
-    <article class="progress-pill clickable-pill" data-note-filter="copy"><span>待文案</span><strong>${waitingCopy}</strong></article>
-    <article class="progress-pill clickable-pill" data-note-filter="design"><span>待设计</span><strong>${waitingDesign}</strong></article>
     ${clientCards}
   `;
 }
@@ -1324,10 +1415,12 @@ function noteHtml(note) {
       ${note.status === "published" ? `<span class="published-check note-published-check">✓</span>` : ""}
       <div class="item-head">
         <strong>${escapeHtml(note.title)}</strong>
-        ${statusSelectHtml(note)}
+        <div class="note-status-stack">
+          ${statusSelectHtml(note)}
+          <div class="note-date-line">${formatDate(note.publishDate)}</div>
+        </div>
       </div>
       <div class="tag-row">${tagButtonsHtml(note.tags)}</div>
-      <div class="note-date-line">${formatDate(note.publishDate)}</div>
       <div class="tag-row">
         <span class="tag">${escapeHtml(client?.name || "未选择客户")}</span>
         <span class="tag">${monthLabel(note.planMonth || planMonthFromDate(note.publishDate))}</span>
@@ -1347,9 +1440,12 @@ function noteHtml(note) {
 }
 
 function renderDesignRequests() {
-  if (!$("designRequestList")) return;
-  const clientFilter = $("designClientFilter").value || "all";
-  const monthFilter = $("designMonthFilter").value || "all";
+  const listEl = document.getElementById("designRequestList");
+  const clientEl = document.getElementById("designClientFilter");
+  const monthEl = document.getElementById("designMonthFilter");
+  if (!listEl || !clientEl || !monthEl) return;
+  const clientFilter = clientEl.value || "all";
+  const monthFilter = monthEl.value || "all";
   const rows = state.notes
     .filter((note) => note.planKind !== "backup")
     .filter((note) => note.needDesign === "yes")
@@ -1357,7 +1453,7 @@ function renderDesignRequests() {
     .filter((note) => clientFilter === "all" || note.clientId === clientFilter)
     .filter((note) => monthFilter === "all" || (note.planMonth || planMonthFromDate(note.publishDate)) === monthFilter)
     .sort((a, b) => designDueDate(a).localeCompare(designDueDate(b)));
-  $("designRequestList").innerHTML = rows.length ? rows.map(designRequestHtml).join("") : emptyHtml("当前筛选下暂无设计提需。");
+  listEl.innerHTML = rows.length ? rows.map(designRequestHtml).join("") : emptyHtml("当前筛选下暂无设计提需。");
 }
 
 function renderTypes() {
@@ -1383,6 +1479,46 @@ function renderBrands() {
   $("brandList").innerHTML = rows.length
     ? rows.map(brandHtml).join("")
     : emptyHtml("还没有品牌参考，先把常看的对标账号放进来。");
+}
+
+function renderTools() {
+  if (!$("toolList")) return;
+  $("toolCount").textContent = `${state.toolRefs.length} 个`;
+  $("toolList").innerHTML = state.toolRefs.length
+    ? state.toolRefs.map(toolHtml).join("")
+    : emptyHtml("点击添加外链工具");
+}
+
+function toolHtml(tool) {
+  return `
+    <article class="tool-item" data-tool-id="${tool.id}">
+      <div>
+        <strong>${escapeHtml(tool.title)}</strong>
+        <a href="${escapeHtml(tool.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(tool.url)}">${escapeHtml(shortUrl(tool.url))}</a>
+      </div>
+      <button class="ghost-btn mini-action" type="button" data-edit-tool="${tool.id}">编辑</button>
+    </article>
+  `;
+}
+
+function fillToolForm(tool = null) {
+  $("toolId").value = tool?.id || "";
+  $("toolTitle").value = tool?.title || "";
+  $("toolUrl").value = tool?.url || "";
+}
+
+function collectToolForm() {
+  return {
+    id: $("toolId").value || uid("tool"),
+    title: $("toolTitle").value.trim(),
+    url: normalizeExternalUrl($("toolUrl").value.trim()),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function normalizeExternalUrl(url) {
+  if (!url) return "";
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
 function renderSettings() {
@@ -1657,8 +1793,10 @@ function renderSelects() {
   const oldDayCalendarMonth = $("dayCalendarMonth")?.value;
   const oldPlanClient = $("planClientFilter")?.value || "all";
   const oldPlanMonth = $("planMonthFilter")?.value;
-  const oldDesignClient = $("designClientFilter")?.value || "all";
-  const oldDesignMonth = $("designMonthFilter")?.value || "all";
+  const designClientEl = document.getElementById("designClientFilter");
+  const designMonthEl = document.getElementById("designMonthFilter");
+  const oldDesignClient = designClientEl?.value || "all";
+  const oldDesignMonth = designMonthEl?.value || "all";
   const oldTypeTag = $("typeTagFilter")?.value || "all";
   const oldTypeClient = $("typeClientFilter")?.value || "all";
   const oldMonthlyReportClient = $("monthlyReportClient")?.value;
@@ -1677,11 +1815,11 @@ function renderSelects() {
   $("monthlyReportClient").innerHTML = clientOptions || `<option value="">先新增客户</option>`;
   $("noteFilterClient").innerHTML = `<option value="all">全部客户</option>${clientOptions}`;
   $("planClientFilter").innerHTML = `<option value="all">全部客户</option>${clientOptions}`;
-  $("designClientFilter").innerHTML = `<option value="all">全部客户</option>${clientOptions}`;
+  if (designClientEl) designClientEl.innerHTML = `<option value="all">全部客户</option>${clientOptions}`;
   $("typeClientFilter").innerHTML = `<option value="all">全部客户</option>${clientOptions}`;
   $("noteFilterMonth").innerHTML = `<option value="all">全部月份</option>${monthOptions}`;
   $("planMonthFilter").innerHTML = monthOptions;
-  $("designMonthFilter").innerHTML = `<option value="all">全部月份</option>${monthOptions}`;
+  if (designMonthEl) designMonthEl.innerHTML = `<option value="all">全部月份</option>${monthOptions}`;
   $("dayCalendarMonth").innerHTML = monthOptions;
   $("monthlyReportMonth").innerHTML = monthOptions;
   $("noteFilterTag").innerHTML = `<option value="all">全部标签</option>${tagOptions}`;
@@ -1698,8 +1836,8 @@ function renderSelects() {
   if (oldPlanClient) $("planClientFilter").value = oldPlanClient;
   if (oldPlanMonth && allPlanMonths().includes(oldPlanMonth)) $("planMonthFilter").value = oldPlanMonth;
   else $("planMonthFilter").value = currentPlanMonth();
-  if (oldDesignClient) $("designClientFilter").value = oldDesignClient;
-  if (oldDesignMonth) $("designMonthFilter").value = oldDesignMonth;
+  if (oldDesignClient && designClientEl) designClientEl.value = oldDesignClient;
+  if (oldDesignMonth && designMonthEl) designMonthEl.value = oldDesignMonth;
   if (oldTypeTag) $("typeTagFilter").value = oldTypeTag;
   if (oldTypeClient) $("typeClientFilter").value = oldTypeClient;
   if (oldMonthlyReportClient && state.clients.some((client) => client.id === oldMonthlyReportClient)) $("monthlyReportClient").value = oldMonthlyReportClient;
@@ -1728,7 +1866,7 @@ ${done || ""}
 三、本周计划
 ${numberLines(plan || "")}
 ——
-@老板 以上是我们的周报内容，请老板查收，有问题随时沟通~`;
+以上是我们的周报内容，请查收，有问题随时沟通~`;
   renderMonthlyReport();
 }
 
@@ -2186,7 +2324,6 @@ function updateNoteField(noteId, field, value) {
   saveState();
   renderClientDetail();
   renderPlans();
-  renderDesignRequests();
   renderNotes();
   renderTypes();
   showToast("已保存");
@@ -2295,6 +2432,78 @@ function handleDayPlanChange(event) {
 }
 
 function editTaskFromCard(card) {
+  openTaskEditModal(card.dataset.taskCard, card.dataset.manualId || "");
+}
+
+function findTaskForEdit(taskKey, manualId = "") {
+  if (manualId) return state.customTasks.find((entry) => entry.id === manualId);
+  const { tasks, risks } = buildTasks();
+  return [...tasks, ...risks].find((entry) => taskId(entry) === taskKey);
+}
+
+function openTaskEditModal(taskKey = "", manualId = "", defaults = {}) {
+  editingTaskId = taskKey || "";
+  const task = taskKey || manualId ? findTaskForEdit(taskKey, manualId) : null;
+  const parts = splitTaskTitle(task?.title || defaults.title || "手动任务：");
+  $("taskEditTitle").textContent = task ? "编辑事项" : "新增事项";
+  $("taskEditId").value = manualId || task?.manualId || "";
+  $("taskEditClient").value = defaults.client || parts.client || "";
+  $("taskEditAction").value = defaults.action || parts.action || "";
+  $("taskEditDetail").value = task?.detail || defaults.detail || "";
+  $("taskEditBucket").value = task?.bucket || defaults.bucket || "ui";
+  $("taskEditScope").value = task?.scope || defaults.scope || "day";
+  $("taskEditTags").value = normalizeTags(task?.tags || defaults.tags || []).join("、");
+  $("taskEditModal").hidden = false;
+  window.setTimeout(() => $("taskEditAction")?.focus(), 80);
+}
+
+function closeTaskEditModal() {
+  $("taskEditModal").hidden = true;
+  editingTaskId = "";
+}
+
+function saveTaskEditFromModal() {
+  const client = $("taskEditClient").value.trim() || "手动任务";
+  const action = $("taskEditAction").value.trim();
+  if (!action) return showToast("请填写具体事项");
+  const detail = $("taskEditDetail").value.trim();
+  const tags = normalizeTags($("taskEditTags").value);
+  const bucket = $("taskEditBucket").value;
+  const scope = $("taskEditScope").value;
+  const title = `${client}：${action}`;
+  const manualId = $("taskEditId").value;
+  if (manualId) {
+    const task = state.customTasks.find((entry) => entry.id === manualId);
+    if (task) {
+      task.title = title;
+      task.detail = detail;
+      task.tags = tags;
+      task.bucket = bucket;
+      task.scope = scope;
+    }
+  } else if (editingTaskId) {
+    state.taskOverrides[editingTaskId] = { title, detail, tags, bucket, scope };
+  } else {
+    state.customTasks.push({
+      id: uid("manual_task"),
+      title,
+      detail,
+      tags,
+      bucket,
+      scope,
+      order: state.customTasks.filter((task) => task.bucket === bucket).length,
+      createdAt: new Date().toISOString(),
+    });
+  }
+  saveState();
+  closeTaskEditModal();
+  renderDashboard();
+  renderDayPlans();
+  showToast("事项已保存");
+}
+
+/*
+function editTaskFromCardOld(card) {
   const manualId = card.dataset.manualId;
   const { tasks, risks } = buildTasks();
   const task = manualId
@@ -2326,6 +2535,7 @@ function editTaskFromCard(card) {
   renderDayPlans();
   showToast("任务已修改");
 }
+*/
 
 function applyTagFilter(tag) {
   selectedTag = tag || "all";
@@ -2504,8 +2714,23 @@ document.querySelectorAll(".quick-tab").forEach((button) => {
   });
 });
 
-$("sidebarToggle").addEventListener("click", () => {
-  document.body.classList.toggle("sidebar-collapsed");
+$("sidebarToggle").addEventListener("click", toggleSidebar);
+$("sidebarEdgeToggle").addEventListener("click", toggleSidebar);
+
+document.querySelectorAll("[data-nav-group-toggle]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const key = button.dataset.navGroupToggle;
+    uiState.navGroups[key] = uiState.navGroups[key] === false;
+    saveUiState();
+    applyUiState();
+  });
+});
+
+document.addEventListener("keydown", (event) => {
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "b") {
+    event.preventDefault();
+    toggleSidebar();
+  }
 });
 
 $("customTaskForm").addEventListener("submit", (event) => {
@@ -2560,10 +2785,23 @@ $("toggleProgressEdit").addEventListener("click", () => {
 
 $("clientProgress").addEventListener("change", (event) => {
   const input = event.target.closest("[data-progress-client]");
-  if (!input) return;
+  const plannedInput = event.target.closest("[data-planned-client]");
+  if (!input && !plannedInput) return;
+  const targetInput = input || plannedInput;
+  const parsed = requireNonNegativeInteger(targetInput.value);
+  if (parsed === null) {
+    renderDashboard();
+    return;
+  }
   const month = currentPlanMonth();
-  state.progressOverrides[month] = state.progressOverrides[month] || {};
-  state.progressOverrides[month][input.dataset.progressClient] = Math.max(0, Number(input.value || 0));
+  if (input) {
+    state.progressOverrides[month] = state.progressOverrides[month] || {};
+    state.progressOverrides[month][input.dataset.progressClient] = parsed;
+  }
+  if (plannedInput) {
+    state.plannedOverrides[month] = state.plannedOverrides[month] || {};
+    state.plannedOverrides[month][plannedInput.dataset.plannedClient] = parsed;
+  }
   saveState();
   renderDashboard();
   showToast("客户进度已保存");
@@ -2571,12 +2809,14 @@ $("clientProgress").addEventListener("change", (event) => {
 
 $("clientProgress").addEventListener("click", (event) => {
   const button = event.target.closest("[data-progress-reset]");
-  if (!button) return;
+  const plannedButton = event.target.closest("[data-planned-reset]");
+  if (!button && !plannedButton) return;
   const month = currentPlanMonth();
-  if (state.progressOverrides[month]) delete state.progressOverrides[month][button.dataset.progressReset];
+  if (button && state.progressOverrides[month]) delete state.progressOverrides[month][button.dataset.progressReset];
+  if (plannedButton && state.plannedOverrides[month]) delete state.plannedOverrides[month][plannedButton.dataset.plannedReset];
   saveState();
   renderDashboard();
-  showToast("已恢复自动统计");
+  showToast(button ? "已恢复自动统计" : "已恢复本月已排自动统计");
 });
 
 ["dayPlanList", "todayPlanPreview"].forEach((id) => {
@@ -2688,6 +2928,28 @@ $("dashboard").addEventListener("change", (event) => {
 });
 
 $("dashboard").addEventListener("click", (event) => {
+  const metricButton = event.target.closest("[data-metric-edit]");
+  if (!metricButton) return;
+  const key = metricButton.dataset.metricEdit;
+  const currentMap = {
+    clients: $("metricClients").textContent,
+    published: $("metricPublished").textContent,
+    review: $("metricReview").textContent,
+    week: $("metricWeek").textContent,
+  };
+  const next = prompt("请输入非负整数：", currentMap[key] || "0");
+  if (next === null) return;
+  const parsed = requireNonNegativeInteger(next);
+  if (parsed === null) return;
+  const month = currentPlanMonth();
+  state.dashboardMetricOverrides[month] = state.dashboardMetricOverrides[month] || {};
+  state.dashboardMetricOverrides[month][key] = parsed;
+  saveState();
+  renderDashboard();
+  showToast("今日任务卡片数据已保存");
+});
+
+$("dashboard").addEventListener("click", (event) => {
   const jumpButton = event.target.closest("[data-quadrant-jump]");
   if (jumpButton) {
     const target = document.querySelector(`[data-quadrant="${jumpButton.dataset.quadrantJump}"]`);
@@ -2699,25 +2961,9 @@ $("dashboard").addEventListener("click", (event) => {
   }
   const editButton = event.target.closest("[data-quadrant-edit]");
   if (editButton) {
-    const client = prompt("客户名称/任务归属：", "手动任务");
-    if (!client?.trim()) return;
-    const action = prompt(`新增到「${editButton.dataset.quadrantEdit}」的具体事项：`);
-    if (!action?.trim()) return;
-    const detail = prompt("任务详情：", "手动添加");
     const bucketMap = { 紧急重要: "ui", 紧急不重要: "un", 不紧急重要: "ni", 不紧急不重要: "nn" };
     const bucket = bucketMap[editButton.dataset.quadrantEdit] || "ui";
-    state.customTasks.push({
-      id: uid("manual_task"),
-      title: `${client.trim()}：${action.trim()}`,
-      detail: detail?.trim() || "手动添加",
-      bucket,
-      scope: "day",
-      order: state.customTasks.filter((task) => task.bucket === bucket).length,
-      createdAt: new Date().toISOString(),
-    });
-    saveState();
-    renderDashboard();
-    showToast("任务已添加");
+    openTaskEditModal("", "", { client: "手动任务", action: "", detail: "", bucket, scope: "day" });
     return;
   }
   const deleteButton = event.target.closest("[data-task-delete-id]");
@@ -2774,6 +3020,21 @@ $("dashboard").addEventListener("drop", (event) => {
 });
 
 $("taskVisibilityFilter").addEventListener("change", renderDashboard);
+
+$("addRiskTask").addEventListener("click", () => {
+  openTaskEditModal("", "", { client: "风险提醒", action: "", detail: "", bucket: "ui", scope: "risk", tags: ["风险"] });
+});
+
+$("taskEditForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  saveTaskEditFromModal();
+});
+
+$("cancelTaskEdit").addEventListener("click", closeTaskEditModal);
+$("closeTaskEdit").addEventListener("click", closeTaskEditModal);
+$("taskEditModal").addEventListener("click", (event) => {
+  if (event.target.id === "taskEditModal") closeTaskEditModal();
+});
 
 function updateNoteStatus(noteId, status) {
   const note = state.notes.find((entry) => entry.id === noteId);
@@ -2960,7 +3221,7 @@ $("planBoard").addEventListener("change", async (event) => {
   }
 });
 
-$("designRequestList").addEventListener("change", async (event) => {
+document.getElementById("designRequestList")?.addEventListener("change", async (event) => {
   const statusSelect = event.target.closest("[data-status-note]");
   if (statusSelect) {
     updateNoteStatus(statusSelect.dataset.statusNote, statusSelect.value);
@@ -3090,8 +3351,8 @@ $("deleteNote").addEventListener("click", () => {
 
 $("planClientFilter").addEventListener("change", renderPlans);
 $("planMonthFilter").addEventListener("change", renderPlans);
-$("designClientFilter").addEventListener("change", renderDesignRequests);
-$("designMonthFilter").addEventListener("change", renderDesignRequests);
+document.getElementById("designClientFilter")?.addEventListener("change", renderDesignRequests);
+document.getElementById("designMonthFilter")?.addEventListener("change", renderDesignRequests);
 $("typeTagFilter").addEventListener("change", renderTypes);
 $("typeClientFilter").addEventListener("change", renderTypes);
 $("typeHistoryList").addEventListener("change", handleNoteLinkChange);
@@ -3212,6 +3473,40 @@ $("deleteBrand").addEventListener("click", () => {
   renderBrands();
   showToast("品牌参考已删除");
 });
+
+$("toolForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const tool = collectToolForm();
+  if (!tool.title || !tool.url) return showToast("请填写工具标题和网址");
+  upsert(state.toolRefs, tool);
+  saveState();
+  fillToolForm(tool);
+  renderTools();
+  showToast("工具已保存");
+});
+
+$("toolList").addEventListener("click", (event) => {
+  if (event.target.closest("a")) return;
+  const button = event.target.closest("[data-edit-tool]");
+  const card = event.target.closest("[data-tool-id]");
+  const id = button?.dataset.editTool || card?.dataset.toolId;
+  if (!id) return;
+  const tool = state.toolRefs.find((entry) => entry.id === id);
+  if (tool) fillToolForm(tool);
+});
+
+$("resetToolForm").addEventListener("click", () => fillToolForm());
+
+$("deleteTool").addEventListener("click", () => {
+  const id = $("toolId").value;
+  if (!id) return showToast("请选择工具");
+  state.toolRefs = state.toolRefs.filter((entry) => entry.id !== id);
+  saveState();
+  fillToolForm();
+  renderTools();
+  showToast("工具已删除");
+});
+
 $("createMonthPlan").addEventListener("click", createMonthPlan);
 $("copyToday").addEventListener("click", () => copyText(todayTextForCopy()));
 $("copyDayPlans").addEventListener("click", copyDayPlanText);
@@ -3323,6 +3618,14 @@ $("saveReportTemplate").addEventListener("click", () => {
   showToast("周报模板已保存");
 });
 
+$("clearReportTemplate").addEventListener("click", () => {
+  $("reportDone").value = "";
+  $("reportPlan").value = "";
+  $("reportData").value = "";
+  renderReport();
+  showToast("已切换为空白周报模板");
+});
+
 $("loadReportTemplate").addEventListener("click", () => {
   const clientId = $("reportClient").value;
   if (!clientId || !state.reportTemplates[clientId]) return showToast("该客户暂无模板");
@@ -3376,8 +3679,11 @@ $("clearAll").addEventListener("click", () => {
   state.dayPlans = [];
   state.weekPlans = [];
   state.brandRefs = [];
+  state.toolRefs = [];
   state.reportTemplates = {};
   state.progressOverrides = {};
+  state.plannedOverrides = {};
+  state.dashboardMetricOverrides = {};
   state.mailTemplate = defaultMailTemplate();
   saveState();
   fillClientForm();
@@ -3387,6 +3693,8 @@ $("clearAll").addEventListener("click", () => {
 });
 
 async function init() {
+  loadUiState();
+  applyUiState();
   state = await loadState();
   if (state.clients.length) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state, null, 2));
@@ -3394,6 +3702,7 @@ async function init() {
   fillClientForm();
   fillNoteForm();
   fillBrandForm();
+  fillToolForm();
   render();
 }
 

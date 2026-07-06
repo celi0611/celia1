@@ -17,16 +17,38 @@
         </div>
       </div>
       <nav class="nav" aria-label="页面导航">
-        <button class="nav-btn active" data-view="dashboard">今日</button>
-        <button class="nav-btn" data-view="dayplan">日/周计划</button>
-        <button class="nav-btn" data-view="clients">客户</button>
-        <button class="nav-btn" data-view="plans">月度规划</button>
-        <button class="nav-btn" data-view="designs">设计提需</button>
-        <button class="nav-btn" data-view="notes">笔记</button>
-        <button class="nav-btn" data-view="types">笔记类型</button>
-        <button class="nav-btn" data-view="brands">品牌参考</button>
-        <button class="nav-btn" data-view="reports">周月报管理</button>
-        <button class="nav-btn" data-view="settings">备份</button>
+        <div class="nav-pinned">
+          <button class="nav-btn active" data-view="dashboard" data-icon="今" title="今日"><span class="nav-icon">今</span><span class="nav-text">今日</span></button>
+          <button class="nav-btn" data-view="dayplan" data-icon="日" title="日/周计划"><span class="nav-icon">日</span><span class="nav-text">日/周</span></button>
+        </div>
+        <section class="nav-group" data-nav-group="content">
+          <button class="nav-group-title" type="button" data-nav-group-toggle="content"><span>✎ 内容创作</span><b>⌄</b></button>
+          <div class="nav-group-items">
+            <button class="nav-btn" data-view="notes" data-icon="排" title="笔记排期"><span class="nav-icon">排</span><span class="nav-text">排期</span></button>
+            <button class="nav-btn" data-view="types" data-icon="型" title="笔记类型"><span class="nav-icon">型</span><span class="nav-text">类型</span></button>
+            <button class="nav-btn" data-view="brands" data-icon="参" title="品牌参考"><span class="nav-icon">参</span><span class="nav-text">参考</span></button>
+          </div>
+        </section>
+        <section class="nav-group" data-nav-group="client">
+          <button class="nav-group-title" type="button" data-nav-group-toggle="client"><span>▣ 客户规划</span><b>⌄</b></button>
+          <div class="nav-group-items">
+            <button class="nav-btn" data-view="clients" data-icon="客" title="客户管理"><span class="nav-icon">客</span><span class="nav-text">客户</span></button>
+            <button class="nav-btn" data-view="plans" data-icon="月" title="月度规划"><span class="nav-icon">月</span><span class="nav-text">月规</span></button>
+          </div>
+        </section>
+        <section class="nav-group" data-nav-group="report">
+          <button class="nav-group-title" type="button" data-nav-group-toggle="report"><span>▤ 报表管理</span><b>⌄</b></button>
+          <div class="nav-group-items">
+            <button class="nav-btn" data-view="reports" data-icon="报" title="周月报管理"><span class="nav-icon">报</span><span class="nav-text">周月报</span></button>
+          </div>
+        </section>
+        <div class="nav-toolbox">
+          <div class="nav-toolbox-title">工具箱</div>
+          <button class="nav-btn toolbox-nav" data-view="tools" data-icon="工" title="工具箱"><span class="nav-icon">工</span><span class="nav-text">工具箱</span></button>
+        </div>
+        <div class="nav-bottom">
+          <button class="nav-btn" data-view="settings" data-icon="备" title="数据备份"><span class="nav-icon">备</span><span class="nav-text">备份</span></button>
+        </div>
       </nav>
       <div class="sidebar-foot">
         <img class="sidebar-rabbit" src="./assets/rabbit-sidebar-cutout.png" alt="粉红兔子插图" />
@@ -37,6 +59,7 @@
         </label>
       </div>
     </aside>
+    <button id="sidebarEdgeToggle" class="sidebar-edge-toggle" type="button" aria-label="收起或展开侧边栏">‹</button>
 
     <main class="app">
         <section id="dashboard" class="view active">
@@ -115,18 +138,22 @@
           <article class="metric">
             <span>服务客户</span>
             <strong id="metricClients">0</strong>
+            <button class="ghost-btn mini-action" type="button" data-metric-edit="clients">编辑</button>
           </article>
           <article class="metric">
             <span>本月已发</span>
             <strong id="metricPublished">0</strong>
+            <button class="ghost-btn mini-action" type="button" data-metric-edit="published">编辑</button>
           </article>
           <article class="metric">
             <span>待审核</span>
             <strong id="metricReview">0</strong>
+            <button class="ghost-btn mini-action" type="button" data-metric-edit="review">编辑</button>
           </article>
           <article class="metric">
             <span>本周待发</span>
             <strong id="metricWeek">0</strong>
+            <button class="ghost-btn mini-action" type="button" data-metric-edit="week">编辑</button>
           </article>
         </div>
 
@@ -141,7 +168,10 @@
           <section class="panel">
             <div class="panel-title">
               <h3>风险提醒</h3>
-              <span id="riskCount">0 项</span>
+              <div class="panel-actions">
+                <span id="riskCount">0 项</span>
+                <button id="addRiskTask" class="ghost-btn mini-action" type="button">新增</button>
+              </div>
             </div>
             <div id="riskList" class="task-list compact"></div>
           </section>
@@ -380,23 +410,6 @@
         </section>
       </section>
 
-      <section id="designs" class="view">
-        <div class="topbar">
-          <button class="ghost-btn back-btn" type="button">返回上一层</button>
-          <div>
-            <h2>设计提需</h2>
-            <p>笔记发布前 2 天提醒，区分自己制作图片和设计制作图片。</p>
-          </div>
-          <div class="toolbar">
-            <select id="designClientFilter"></select>
-            <select id="designMonthFilter"></select>
-          </div>
-        </div>
-        <section class="panel">
-          <div id="designRequestList" class="design-list"></div>
-        </section>
-      </section>
-
       <section id="notes" class="view">
         <div class="topbar">
           <button class="ghost-btn back-btn" type="button">返回上一层</button>
@@ -516,7 +529,7 @@
                   <option value="published">已发布</option>
                 </select>
                 <select id="noteFilterSubStatus">
-                  <option value="all">全部未发布状态</option>
+                  <option value="all">全部状态</option>
                   <option value="idea">待选题</option>
                   <option value="design">待设计/提需</option>
                   <option value="copy">待文案</option>
@@ -590,6 +603,44 @@
         </div>
       </section>
 
+      <section id="tools" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>工具箱</h2>
+            <p>保存常用外链工具，点击可跳转第三方页面。</p>
+          </div>
+        </div>
+        <div class="tools-layout">
+          <section class="panel">
+            <div class="panel-title">
+              <h3>外链工具</h3>
+              <span id="toolCount">0 个</span>
+            </div>
+            <div id="toolList" class="tool-list"></div>
+          </section>
+          <form id="toolForm" class="panel form-panel">
+            <div class="panel-title">
+              <h3>工具信息</h3>
+              <button id="resetToolForm" class="ghost-btn mini-action" type="button">新增工具</button>
+            </div>
+            <input type="hidden" id="toolId" />
+            <label>
+              工具标题
+              <input id="toolTitle" maxlength="24" placeholder="例如：小红书后台" required />
+            </label>
+            <label>
+              外部网址
+              <input id="toolUrl" placeholder="https://..." required />
+            </label>
+            <div class="form-actions">
+              <button class="primary-btn" type="submit">保存工具</button>
+              <button id="deleteTool" class="danger-btn" type="button">删除</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
       <section id="reports" class="view">
         <div class="topbar">
           <button class="ghost-btn back-btn" type="button">返回上一层</button>
@@ -630,7 +681,8 @@
             </label>
             <div class="form-actions">
               <button id="saveReportTemplate" class="ghost-btn" type="button">保存该客户模板</button>
-              <button id="loadReportTemplate" class="ghost-btn" type="button">载入上次模板</button>
+              <button id="clearReportTemplate" class="ghost-btn" type="button">一键清空</button>
+              <button id="loadReportTemplate" class="ghost-btn" type="button">查看上次周报内容</button>
             </div>
           </section>
           <section class="panel">
@@ -750,6 +802,54 @@
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="taskEditModal" class="modal-backdrop" hidden>
+      <form id="taskEditForm" class="modal-card form-panel">
+        <div class="panel-title">
+          <h3 id="taskEditTitle">编辑事项</h3>
+          <button id="cancelTaskEdit" class="ghost-btn mini-action" type="button">取消</button>
+        </div>
+        <input id="taskEditId" type="hidden" />
+        <label>
+          归属客户
+          <input id="taskEditClient" placeholder="例如：阿明小菜" />
+        </label>
+        <label>
+          具体事项
+          <input id="taskEditAction" required placeholder="例如：给设计提需" />
+        </label>
+        <label>
+          任务详情
+          <textarea id="taskEditDetail" rows="5" placeholder="填写完整任务内容"></textarea>
+        </label>
+        <div class="form-row">
+          <label>
+            四象限
+            <select id="taskEditBucket">
+              <option value="ui">紧急重要</option>
+              <option value="un">紧急不重要</option>
+              <option value="ni">不紧急重要</option>
+              <option value="nn">不紧急不重要</option>
+            </select>
+          </label>
+          <label>
+            类型
+            <select id="taskEditScope">
+              <option value="day">日计划</option>
+              <option value="week">周计划</option>
+              <option value="risk">风险提醒</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          标签
+          <input id="taskEditTags" placeholder="用顿号分隔，例如：审核、发布" />
+        </label>
+        <div class="form-actions">
+          <button class="primary-btn" type="submit">保存</button>
+          <button class="ghost-btn" type="button" id="closeTaskEdit">取消</button>
+        </div>
+      </form>
+    </div>
     <script src="./data/ledger-bootstrap.js"></script>
     <script src="./app.js"></script>
   </body>

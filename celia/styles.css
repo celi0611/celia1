@@ -13,17 +13,38 @@
   --yellow: #9c6b7c;
   --yellow-soft: #f2ecef;
   --shadow: 0 18px 42px rgba(227, 62, 91, 0.12);
+  --radius-lg: 18px;
+  --radius-sm: 10px;
+  --gap-card: 14px;
+  --pad-card: 18px;
+  --shadow-soft: 0 12px 30px rgba(227, 62, 91, 0.1);
+  --shadow-hover: 0 20px 46px rgba(227, 62, 91, 0.16);
+  --motion: 0.2s ease;
 }
 
 * {
   box-sizing: border-box;
 }
 
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 300px 1fr;
   background: var(--bg);
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
@@ -31,7 +52,7 @@ body {
 }
 
 body.sidebar-collapsed {
-  grid-template-columns: 84px 1fr;
+  grid-template-columns: 104px 1fr;
 }
 
 button,
@@ -47,34 +68,68 @@ button {
 
 .sidebar {
   position: sticky;
-  top: 0;
-  height: 100vh;
+  top: 14px;
+  height: calc(100vh - 28px);
   display: flex;
   flex-direction: column;
   gap: 22px;
+  margin-left: 14px;
   padding: 24px;
-  border-right: 1px solid var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
   background: linear-gradient(180deg, #f2ecef 0%, #ecc0d1 100%);
-  transition: width 0.2s ease, padding 0.2s ease;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: width var(--motion), padding var(--motion), gap var(--motion),
+    border-radius var(--motion);
 }
 
 .sidebar-toggle {
   position: fixed;
-  left: 236px;
+  left: 252px;
   top: 22px;
   z-index: 50;
   width: 38px;
   height: 38px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: #fff;
   color: var(--red);
   font-weight: 900;
   box-shadow: var(--shadow);
 }
 
+.sidebar-edge-toggle {
+  position: fixed;
+  left: 294px;
+  top: 50%;
+  z-index: 55;
+  width: 22px;
+  height: 64px;
+  border: 1px solid var(--line);
+  border-left: 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: #fff8fb;
+  color: var(--red);
+  font-size: 22px;
+  font-weight: 900;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 0.2s ease, left 0.2s ease;
+}
+
+.sidebar:hover + .sidebar-edge-toggle,
+.sidebar-edge-toggle:hover {
+  opacity: 1;
+}
+
 body.sidebar-collapsed .sidebar-toggle {
-  left: 23px;
+  left: 35px;
+}
+
+body.sidebar-collapsed .sidebar-edge-toggle {
+  left: 98px;
+  opacity: 0.86;
 }
 
 .brand {
@@ -116,21 +171,64 @@ body.sidebar-collapsed .sidebar-toggle {
 
 body.sidebar-collapsed .sidebar {
   padding: 72px 10px 14px;
-  gap: 14px;
+  gap: 12px;
 }
 
 body.sidebar-collapsed .brand div,
 body.sidebar-collapsed .storage-status,
 body.sidebar-collapsed .sidebar-foot .ghost-btn,
-body.sidebar-collapsed .sidebar-rabbit {
+body.sidebar-collapsed .sidebar-rabbit,
+body.sidebar-collapsed .nav-text,
+body.sidebar-collapsed .nav-group-title span,
+body.sidebar-collapsed .nav-group-title b,
+body.sidebar-collapsed .nav-toolbox-title {
   display: none;
 }
 
 body.sidebar-collapsed .nav-btn {
+  position: relative;
   min-height: 42px;
   padding: 0;
   text-align: center;
   font-size: 12px;
+}
+
+body.sidebar-collapsed .nav-group-title {
+  display: none;
+}
+
+body.sidebar-collapsed .nav-group,
+body.sidebar-collapsed .nav-toolbox,
+body.sidebar-collapsed .nav-bottom {
+  padding: 6px;
+  border: 1px solid rgba(227, 62, 91, 0.16);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 248, 251, 0.38);
+  box-shadow: none;
+}
+
+body.sidebar-collapsed .nav-group.collapsed .nav-group-items {
+  display: grid;
+}
+
+body.sidebar-collapsed .nav-btn {
+  justify-content: center;
+}
+
+body.sidebar-collapsed .nav-btn:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 58px;
+  top: 50%;
+  z-index: 90;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  box-shadow: var(--shadow);
 }
 
 h1,
@@ -183,7 +281,68 @@ h1 {
 
 .nav {
   display: grid;
+  gap: 12px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.nav-pinned,
+.nav-group-items,
+.nav-bottom {
+  display: grid;
   gap: 8px;
+}
+
+.nav-pinned,
+.nav-group,
+.nav-toolbox,
+.nav-bottom {
+  padding: 10px;
+  border: 1px solid rgba(227, 62, 91, 0.18);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 248, 251, 0.58);
+  box-shadow: var(--shadow-soft);
+}
+
+.nav-group {
+  display: grid;
+  gap: 8px;
+}
+
+.nav-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 30px;
+  border: 0;
+  background: transparent;
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.nav-group.collapsed .nav-group-items {
+  display: none;
+}
+
+.nav-group.collapsed .nav-group-title b {
+  transform: rotate(-90deg);
+}
+
+.nav-toolbox {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.nav-toolbox-title {
+  color: var(--red);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.nav-bottom {
+  margin-top: 6px;
 }
 
 .nav-btn,
@@ -192,15 +351,43 @@ h1 {
 .danger-btn {
   min-height: 40px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 0 14px;
   font-weight: 700;
 }
 
 .nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   text-align: left;
   color: var(--muted);
   background: transparent;
+  transition: background var(--motion), color var(--motion), padding var(--motion),
+    transform var(--motion), box-shadow var(--motion);
+}
+
+.nav-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(227, 62, 91, 0.1);
+}
+
+.nav-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: #fff8fb;
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.toolbox-nav .nav-icon {
+  background: var(--red);
+  color: #fff;
 }
 
 .nav-btn.active {
@@ -228,6 +415,54 @@ h1 {
 .app {
   min-width: 0;
   padding: 28px;
+}
+
+.tools-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 18px;
+  align-items: start;
+}
+
+.tool-list {
+  display: grid;
+  gap: 10px;
+}
+
+.tool-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff8fb;
+}
+
+.tool-item div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.tool-item strong {
+  overflow: hidden;
+  color: var(--red);
+  font-size: 17px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool-item a {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .quick-tabs {
@@ -1293,6 +1528,7 @@ textarea:focus {
   position: relative;
   display: grid;
   gap: 10px;
+  overflow: hidden;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1303,6 +1539,25 @@ textarea:focus {
   overflow: hidden;
   border-color: #e33e5b;
   background: #fff0f5;
+}
+
+.plan-card input,
+.plan-card select,
+.plan-card textarea,
+.note-item input,
+.note-item select,
+.note-item textarea,
+.client-item,
+.panel,
+.task {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.plan-card textarea,
+.note-item textarea {
+  overflow: auto;
+  word-break: break-word;
 }
 
 .published-check {
@@ -1612,11 +1867,24 @@ textarea:focus {
   position: relative;
 }
 
+.note-item.published {
+  border-color: #ecc0d1;
+  background: #fff0f5;
+}
+
+.note-status-stack {
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+  min-width: 120px;
+}
+
 .note-date-line {
   color: var(--red);
-  font-size: 24px;
+  font-size: 15px;
   font-weight: 900;
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 .calendar-preview {
@@ -1995,6 +2263,247 @@ textarea:focus {
   transform: translateY(0);
 }
 
+/* 结构层级统一：只调整版型、留白和交互动效，不改动现有配色。 */
+.metric,
+.panel,
+.modal-card,
+.report-preview,
+.monthly-visual,
+.plan-client,
+.calendar-summary-preview,
+.rabbit-hero {
+  border-radius: var(--radius-lg);
+}
+
+.quick-tab,
+.storage-status,
+.client-quick-card,
+.day-week-summary article,
+.day-plan-item,
+.progress-pill,
+.report-client-card,
+.task,
+.client-item,
+.note-item,
+.progress-item,
+.quadrant,
+.quadrant-jump,
+.empty,
+.checkbox-grid label,
+.visual-block,
+.plan-card,
+.design-item,
+.mini-note,
+.tool-item,
+.image-preview,
+.calendar-preview,
+.note-thumb,
+.tag-btn,
+.tag,
+input,
+select,
+textarea {
+  border-radius: var(--radius-sm);
+}
+
+.panel,
+.metric,
+.client-quick-card,
+.day-week-summary article,
+.day-plan-item,
+.progress-pill,
+.report-client-card,
+.task,
+.client-item,
+.note-item,
+.progress-item,
+.quadrant,
+.plan-client,
+.plan-card,
+.mini-note,
+.tool-item,
+.monthly-visual,
+.report-preview {
+  transition: transform var(--motion), box-shadow var(--motion),
+    border-color var(--motion);
+}
+
+.panel:hover,
+.metric:hover,
+.client-quick-card:hover,
+.day-week-summary article:hover,
+.day-plan-item:hover,
+.progress-pill:hover,
+.report-client-card:hover,
+.task:hover,
+.client-item:hover,
+.note-item:hover,
+.progress-item:hover,
+.quadrant:hover,
+.plan-client:hover,
+.plan-card:hover,
+.mini-note:hover,
+.tool-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.panel:active,
+.metric:active,
+.client-quick-card:active,
+.day-plan-item:active,
+.task:active,
+.client-item:active,
+.note-item:active,
+.plan-card:active,
+.tool-item:active {
+  transform: translateY(0);
+}
+
+.panel,
+.metric,
+.client-quick-card,
+.day-week-summary article,
+.day-plan-item,
+.progress-pill,
+.report-client-card,
+.task,
+.client-item,
+.note-item,
+.progress-item,
+.quadrant,
+.plan-client,
+.plan-card,
+.mini-note,
+.tool-item,
+.form-panel,
+.modal-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.panel-title,
+.item-head,
+.task-title,
+.section-head,
+.plan-status-date,
+.tool-item,
+.form-actions,
+.toolbar,
+.tag-row {
+  min-width: 0;
+}
+
+.tag,
+.tag-btn,
+.nav-text,
+.tool-item strong,
+.tool-item a,
+.plan-title-nowrap,
+.client-item p,
+.note-item p,
+.progress-item p,
+.task p {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tool-item {
+  align-items: stretch;
+  padding: 14px 16px;
+}
+
+.tool-item div {
+  gap: 7px;
+}
+
+.tool-item a {
+  display: block;
+}
+
+.report-preview {
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: #fff8fb;
+  box-shadow: inset 0 0 0 1px rgba(227, 62, 91, 0.06);
+}
+
+.report-panel .form-actions,
+#weeklyReportEditor .form-actions {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff8fb;
+}
+
+#weeklyReportEditor .ghost-btn,
+#weeklyReportEditor .primary-btn,
+#weeklyReportEditor .danger-btn {
+  min-width: 118px;
+}
+
+.note-item {
+  gap: 12px;
+  padding: 16px;
+}
+
+.note-item .item-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(126px, auto);
+  align-items: start;
+  gap: 14px;
+}
+
+.note-status-stack {
+  align-content: start;
+  justify-items: stretch;
+}
+
+.note-date-line {
+  display: inline-grid;
+  place-items: center;
+  justify-self: end;
+  max-width: 100%;
+  min-height: 28px;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff8fb;
+}
+
+.note-item.published .note-date-line {
+  background: #fff;
+}
+
+.plan-card,
+.note-item {
+  overflow-wrap: anywhere;
+}
+
+.sidebar .nav-btn,
+.sidebar .nav-pinned,
+.sidebar .nav-group,
+.sidebar .nav-toolbox,
+.sidebar .nav-bottom {
+  flex-shrink: 0;
+}
+
+body.sidebar-collapsed .nav {
+  gap: 10px;
+}
+
+body.sidebar-collapsed .nav-pinned,
+body.sidebar-collapsed .nav-group,
+body.sidebar-collapsed .nav-toolbox,
+body.sidebar-collapsed .nav-bottom {
+  gap: 6px;
+}
+
+body.sidebar-collapsed .nav-btn {
+  border-radius: var(--radius-sm);
+}
+
 @media (max-width: 980px) {
   body {
     grid-template-columns: 1fr;
@@ -2019,6 +2528,7 @@ textarea:focus {
   .workbench,
   .clients-layout,
   .day-week-columns,
+  .tools-layout,
   .quadrant-board,
   .inline-form,
   .split {
