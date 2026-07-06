@@ -390,6 +390,18 @@ h1 {
   color: #fff;
 }
 
+.today-rabbit-icon {
+  overflow: hidden;
+  background: #fff8fb;
+}
+
+.today-rabbit-icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
 .nav-btn.active {
   color: var(--ink);
   background: var(--panel);
