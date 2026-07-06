@@ -382,8 +382,59 @@ h1 {
 
 .day-week-columns {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(260px, 0.8fr) minmax(320px, 1.2fr);
   gap: 18px;
+  align-items: start;
+}
+
+.day-card {
+  border: 2px solid #ecc0d1;
+}
+
+.plan-side-card {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+.week-card {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.today-card {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.day-week-summary {
+  display: grid;
+  gap: 12px;
+}
+
+.day-week-summary article {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff8fb;
+}
+
+.day-week-summary span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.day-week-summary strong {
+  color: var(--red);
+  font-size: 32px;
+  font-weight: 900;
+}
+
+.day-week-summary p {
+  margin: 0;
+  color: var(--muted);
 }
 
 .bottom-add-form {
@@ -401,7 +452,8 @@ h1 {
   background: #fff8fb;
 }
 
-.day-plan-item.done input {
+.day-plan-item.done input,
+.day-plan-item.done textarea {
   color: var(--muted);
   text-decoration: line-through;
   text-decoration-thickness: 2px;
@@ -452,10 +504,17 @@ h1 {
   font-size: 12px;
 }
 
-.day-plan-item input {
+.day-plan-item input,
+.day-plan-item textarea {
   border: 0;
   background: transparent;
   padding: 6px;
+  min-height: 38px;
+  resize: vertical;
+  white-space: pre-wrap;
+  overflow: visible;
+  line-height: 1.55;
+  word-break: break-word;
 }
 
 .topbar h2 {
@@ -591,9 +650,93 @@ h1 {
 
 .clients-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   margin-bottom: 18px;
+}
+
+.client-quick-panel {
+  margin-bottom: 18px;
+}
+
+.client-quick-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.client-quick-card {
+  display: grid;
+  gap: 4px;
+  min-height: 68px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff8fb;
+  color: var(--ink);
+  text-align: left;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.client-quick-card strong {
+  color: var(--red);
+  font-weight: 900;
+}
+
+.client-quick-card span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.client-name-main {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.client-field-title {
+  color: var(--red);
+  font-weight: 900;
+}
+
+.flash-card {
+  animation: flashPink 1.4s ease;
+}
+
+@keyframes flashPink {
+  0%,
+  100% {
+    box-shadow: none;
+  }
+  35% {
+    border-color: var(--red);
+    box-shadow: 0 0 0 4px rgba(227, 62, 91, 0.16);
+  }
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(35, 28, 34, 0.32);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.modal-card {
+  width: min(760px, 100%);
+  max-height: min(86vh, 860px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 18px;
 }
 
 .panel {
@@ -927,6 +1070,7 @@ textarea:focus {
 
 .client-item,
 .note-item {
+  position: relative;
   cursor: pointer;
   transition: transform 0.16s ease, border-color 0.16s ease;
 }
@@ -1108,7 +1252,17 @@ textarea:focus {
 }
 
 .plan-status-date {
+  flex: 0 0 auto;
+  display: grid;
+  gap: 4px;
   justify-content: flex-end;
+}
+
+.plan-title-nowrap {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mini-note-list {
@@ -1149,6 +1303,14 @@ textarea:focus {
   line-height: 1;
   font-weight: 900;
   pointer-events: none;
+}
+
+.note-published-check {
+  right: 12px;
+  top: 8px;
+  color: var(--red);
+  font-size: 36px;
+  opacity: 0.78;
 }
 
 .auto-textarea {
@@ -1238,6 +1400,7 @@ textarea:focus {
   font-size: 14px;
   font-weight: 900;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .plan-date-inline {
@@ -1802,10 +1965,18 @@ textarea:focus {
   .metric-grid,
   .workbench,
   .clients-layout,
+  .day-week-columns,
   .quadrant-board,
   .inline-form,
   .split {
     grid-template-columns: 1fr;
+  }
+
+  .plan-side-card,
+  .week-card,
+  .today-card {
+    grid-column: auto;
+    grid-row: auto;
   }
 }
 

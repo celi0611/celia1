@@ -698,7 +698,26 @@ function renderDayPlans() {
       .filter((item) => (item.weekKey || weekKey(today)) === selectedWeekPlanWeek)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     $("weekPlanList").innerHTML = weekItems.length ? weekItems.map(weekPlanHtml).join("") : emptyHtml("暂无手动周计划。");
+    renderDayWeekSummary(items, weekItems);
   }
+}
+
+function renderDayWeekSummary(dayItems = [], weekItems = []) {
+  if (!$("dayWeekSummary")) return;
+  const dayDone = dayItems.filter((item) => item.done).length;
+  const weekDone = weekItems.filter((item) => item.done).length;
+  $("dayWeekSummary").innerHTML = `
+    <article>
+      <span>${formatDate(selectedDayPlanDate)}</span>
+      <strong>${dayDone}/${dayItems.length}</strong>
+      <p>今日清单完成进度</p>
+    </article>
+    <article>
+      <span>${weekLabel(selectedWeekPlanWeek)}</span>
+      <strong>${weekDone}/${weekItems.length}</strong>
+      <p>周计划完成进度</p>
+    </article>
+  `;
 }
 
 function dayPlanDates() {
@@ -739,7 +758,7 @@ function dayPlanHtml(item, index = 0) {
     <article class="day-plan-item ${item.done ? "done" : ""}" data-day-plan="${item.id}" draggable="true">
       <button class="check-square ${item.done ? "done" : ""}" data-day-plan-toggle="${item.id}" type="button" aria-label="完成"></button>
       <span class="day-plan-no">${index + 1}</span>
-      <input data-day-plan-text="${item.id}" value="${escapeHtml(item.text)}" />
+      <textarea data-day-plan-text="${item.id}" rows="1">${escapeHtml(item.text)}</textarea>
       <span class="drag-handle" title="拖拽排序">⋮⋮</span>
       <button class="ghost-btn mini-action" data-day-plan-edit="${item.id}" type="button">编辑</button>
       <button class="danger-btn" data-day-plan-delete="${item.id}" type="button">删除</button>
@@ -752,7 +771,7 @@ function weekPlanHtml(item, index = 0) {
     <article class="day-plan-item week-item ${item.done ? "done" : ""}" data-week-plan="${item.id}" draggable="true">
       <button class="check-square ${item.done ? "done" : ""}" data-week-plan-toggle="${item.id}" type="button" aria-label="完成"></button>
       <span class="day-plan-no">${index + 1}</span>
-      <input value="${escapeHtml(item.text)}" data-week-plan-text="${item.id}" />
+      <textarea data-week-plan-text="${item.id}" rows="1">${escapeHtml(item.text)}</textarea>
       <span class="drag-handle" title="拖拽排序">⋮⋮</span>
       <button class="ghost-btn mini-action" data-week-plan-edit="${item.id}" type="button">编辑</button>
       <button class="danger-btn" data-week-plan-delete="${item.id}" type="button">删除</button>
@@ -898,16 +917,30 @@ function monthSummary(clientId, month) {
 
 function renderClients() {
   $("clientCount").textContent = `${state.clients.length} 位`;
+  if ($("clientQuickCards")) {
+    $("clientQuickCards").innerHTML = state.clients.length
+      ? state.clients.map(clientQuickCardHtml).join("")
+      : emptyHtml("暂无客户。");
+  }
   $("clientList").innerHTML = state.clients.length
     ? state.clients.map(clientHtml).join("")
     : emptyHtml("还没有客户，先新增你手里的 4 个客户。");
 }
 
+function clientQuickCardHtml(client) {
+  return `
+    <button class="client-quick-card" type="button" data-client-jump="${client.id}">
+      <strong>${escapeHtml(client.name)}</strong>
+      <span>${publishedThisMonth(client.id)}/${client.target || 10} 已发</span>
+    </button>
+  `;
+}
+
 function clientHtml(client) {
   return `
-    <article class="client-item" data-client-id="${client.id}">
+    <article id="client-row-${client.id}" class="client-item" data-client-id="${client.id}">
       <div class="item-head">
-        <strong>${escapeHtml(client.name)}</strong>
+        <strong class="client-name-main">${escapeHtml(client.name)}</strong>
         <div class="task-actions">
           <span class="tag ${client.type === "new" ? "blue" : "green"}">${typeText(client.type)}</span>
           <button class="ghost-btn mini-action" data-edit-client="${client.id}" type="button">编辑</button>
@@ -919,10 +952,10 @@ function clientHtml(client) {
         <span class="tag">${reviewText(client.reviewMode)}</span>
         <span class="tag">${publisherText(client.publisher)}</span>
       </div>
-      <p>${client.publishDays ? `发布偏好：${escapeHtml(client.publishDays)}` : "未设置固定发布日。"}</p>
-      ${client.profileUrl ? `<p>主页链接：${escapeHtml(client.profileUrl)}</p>` : ""}
-      ${client.bio ? `<p>账号简介：${escapeHtml(client.bio)}</p>` : ""}
-      ${client.attention ? `<p>注意点：${escapeHtml(client.attention)}</p>` : ""}
+      <p><span class="client-field-title">发布偏好：</span>${client.publishDays ? escapeHtml(client.publishDays) : "未设置固定发布日。"}</p>
+      ${client.profileUrl ? `<p><span class="client-field-title">主页链接：</span>${escapeHtml(client.profileUrl)}</p>` : ""}
+      ${client.bio ? `<p><span class="client-field-title">账号简介：</span>${escapeHtml(client.bio)}</p>` : ""}
+      ${client.attention ? `<p><span class="client-field-title">注意点：</span>${escapeHtml(client.attention)}</p>` : ""}
     </article>
   `;
 }
@@ -1133,7 +1166,7 @@ function planCardHtml(note) {
     <article class="plan-card ${note.status === "published" ? "published" : ""}" data-note-id="${note.id}">
       ${note.status === "published" ? `<div class="published-check">✓</div>` : ""}
       <div class="item-head">
-        <strong>${escapeHtml(note.title)}</strong>
+        <strong class="plan-title-nowrap">${escapeHtml(note.title)}</strong>
         <div class="plan-status-date">
           ${statusSelectHtml(note)}
           <span class="plan-date-highlight">${formatDate(note.publishDate)}</span>
@@ -1271,7 +1304,8 @@ function noteProgressOverviewHtml(baseNotes, visibleNotes, monthFilter) {
 function noteHtml(note) {
   const client = clientById(note.clientId);
   return `
-    <article class="note-item" data-note-id="${note.id}">
+    <article class="note-item ${note.status === "published" ? "published" : ""}" data-note-id="${note.id}">
+      ${note.status === "published" ? `<span class="published-check note-published-check">✓</span>` : ""}
       <div class="item-head">
         <strong>${escapeHtml(note.title)}</strong>
         ${statusSelectHtml(note)}
@@ -1341,8 +1375,11 @@ function renderSettings() {
     const current = select.value;
     select.innerHTML = state.clients
       .map((client) => `<option value="${client.id}">${escapeHtml(client.name)}</option>`)
-      .join("");
+      .join("") + `<option value="__new__">新增客户</option>`;
     if (current && state.clients.some((client) => client.id === current)) select.value = current;
+    else if (current === "__new__") select.value = "__new__";
+    const isNew = select.value === "__new__";
+    if ($("globalNewClientWrap")) $("globalNewClientWrap").hidden = !isNew;
   }
   const editor = $("mailTemplateEditor");
   if (editor && document.activeElement !== editor) editor.value = state.mailTemplate || defaultMailTemplate();
@@ -1466,7 +1503,7 @@ function importPlanningForClient(clientId, text, fileName = "") {
 }
 
 async function handleGlobalPlanningImport(file) {
-  const clientId = $("globalImportClient")?.value;
+  const clientId = ensureGlobalImportClient();
   if (!clientId) return showToast("请先选择归属客户");
   const ext = file.name.split(".").pop().toLowerCase();
   if (["doc", "docx", "xls", "xlsx"].includes(ext)) {
@@ -1476,6 +1513,53 @@ async function handleGlobalPlanningImport(file) {
   const text = await file.text();
   importPlanningForClient(clientId, text, file.name);
   renderSettings();
+}
+
+function cleanClientName(name) {
+  return String(name || "")
+    .replace(/[<>/\\|?*:"']/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 30);
+}
+
+function ensureGlobalImportClient() {
+  const select = $("globalImportClient");
+  if (!select) return "";
+  if (select.value !== "__new__") return select.value;
+  const name = cleanClientName($("globalNewClientName")?.value || "");
+  if (!name) {
+    showToast("新客户名称不能为空");
+    return "";
+  }
+  const existing = state.clients.find((client) => client.name === name);
+  if (existing) {
+    select.value = existing.id;
+    if ($("globalNewClientWrap")) $("globalNewClientWrap").hidden = true;
+    return existing.id;
+  }
+  const client = {
+    id: uid("client"),
+    name,
+    type: "new",
+    startDate: dateValue(today),
+    target: 10,
+    publisher: "me",
+    reviewMode: "optional",
+    status: "active",
+    publishDays: "",
+    contractMonths: "",
+    profileUrl: "",
+    bio: "",
+    attention: "",
+    notes: "通过备份页上传解析自动创建",
+    createdAt: new Date().toISOString(),
+  };
+  state.clients.push(client);
+  selectedClientId = client.id;
+  if ($("globalNewClientName")) $("globalNewClientName").value = name;
+  showToast(`已新增客户：${name}`);
+  return client.id;
 }
 
 function undoLastClientImport() {
@@ -1932,6 +2016,7 @@ function escapeHtml(value) {
 
 function fillClientForm(client = null) {
   selectedClientId = client?.id || "";
+  if ($("clientModalTitle")) $("clientModalTitle").textContent = client ? "编辑客户" : "新增客户";
   $("clientId").value = selectedClientId;
   $("clientName").value = client?.name || "";
   $("clientType").value = client?.type || "new";
@@ -1946,6 +2031,16 @@ function fillClientForm(client = null) {
   $("clientBio").value = client?.bio || "";
   $("clientAttention").value = client?.attention || "";
   $("clientNotes").value = client?.notes || "";
+}
+
+function openClientModal(client = null) {
+  fillClientForm(client);
+  $("clientModal").hidden = false;
+  window.setTimeout(() => $("clientName")?.focus(), 80);
+}
+
+function closeClientModal() {
+  $("clientModal").hidden = true;
 }
 
 function fillNoteForm(note = null) {
@@ -2682,8 +2777,20 @@ $("clientForm").addEventListener("submit", (event) => {
   upsert(state.clients, client);
   saveState();
   selectedClientId = client.id;
+  closeClientModal();
   render();
   showToast("客户已保存");
+});
+
+$("clientQuickCards").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-client-jump]");
+  if (!button) return;
+  const target = document.getElementById(`client-row-${button.dataset.clientJump}`);
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    target.classList.add("flash-card");
+    window.setTimeout(() => target.classList.remove("flash-card"), 1400);
+  }
 });
 
 $("noteForm").addEventListener("submit", (event) => {
@@ -2703,7 +2810,7 @@ $("clientList").addEventListener("click", (event) => {
   if (editButton) {
     event.stopPropagation();
     const client = clientById(editButton.dataset.editClient);
-    if (client) fillClientForm(client);
+    if (client) openClientModal(client);
     return;
   }
   const tagButton = event.target.closest("[data-tag]");
@@ -2923,7 +3030,12 @@ $("typeHistoryList").addEventListener("change", (event) => {
   updateNoteStatus(select.dataset.statusNote, select.value);
 });
 
-$("resetClientForm").addEventListener("click", () => fillClientForm());
+$("resetClientForm").addEventListener("click", () => openClientModal());
+$("closeClientModal").addEventListener("click", closeClientModal);
+$("cancelClientEdit").addEventListener("click", closeClientModal);
+$("clientModal").addEventListener("click", (event) => {
+  if (event.target.id === "clientModal") closeClientModal();
+});
 $("resetNoteForm").addEventListener("click", () => fillNoteForm());
 $("noteDate").addEventListener("change", () => {
   if (!$("notePlanMonth").value) $("notePlanMonth").value = planMonthFromDate($("noteDate").value);
@@ -2944,6 +3056,7 @@ $("deleteClient").addEventListener("click", () => {
   selectedClientId = "";
   saveState();
   fillClientForm();
+  closeClientModal();
   render();
   showToast("客户已删除");
 });
@@ -3092,6 +3205,22 @@ $("saveMailTemplate").addEventListener("click", () => {
   state.mailTemplate = $("mailTemplateEditor").value.trim() || defaultMailTemplate();
   saveState();
   showToast("每日邮件结构已保存");
+});
+
+$("globalImportClient").addEventListener("change", () => {
+  const isNew = $("globalImportClient").value === "__new__";
+  $("globalNewClientWrap").hidden = !isNew;
+  if (isNew) window.setTimeout(() => $("globalNewClientName")?.focus(), 80);
+});
+
+$("globalNewClientName").addEventListener("change", () => {
+  if ($("globalImportClient").value !== "__new__") return;
+  const clientId = ensureGlobalImportClient();
+  if (!clientId) return;
+  saveState();
+  render();
+  $("globalImportClient").value = clientId;
+  $("globalNewClientWrap").hidden = true;
 });
 
 $("globalPlanningImport").addEventListener("change", async (event) => {

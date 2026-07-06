@@ -161,9 +161,16 @@
           </div>
           <button id="dayCalendarJump" class="primary-btn" type="button">日历大盘</button>
         </div>
-        <section class="panel day-week-board">
+        <section class="day-week-board">
           <div class="day-week-columns">
-            <div>
+            <section class="panel day-card plan-side-card">
+              <div class="panel-title">
+                <h3>计划总览</h3>
+                <span>当前周期</span>
+              </div>
+              <div id="dayWeekSummary" class="day-week-summary"></div>
+            </section>
+            <section class="panel day-card today-card">
               <div class="panel-title">
                 <h3>今日清单</h3>
                 <div class="panel-actions">
@@ -176,8 +183,8 @@
                 <input id="dayPlanText" placeholder="例如：写阿明小菜 7月7日探店招募文案" required />
                 <button class="primary-btn" type="submit">添加</button>
               </form>
-            </div>
-            <div>
+            </section>
+            <section class="panel day-card week-card">
               <div class="panel-title">
                 <h3>周计划</h3>
                 <div class="panel-actions">
@@ -190,7 +197,7 @@
                 <input id="weekPlanText" placeholder="例如：本周完成雅居小馆月报复盘" required />
                 <button class="primary-btn" type="submit">添加</button>
               </form>
-            </div>
+            </section>
           </div>
         </section>
         <section id="dayCalendarSection" class="panel">
@@ -226,6 +233,14 @@
           <button id="resetClientForm" class="primary-btn">新增客户</button>
         </div>
 
+        <section class="panel client-quick-panel">
+          <div class="panel-title">
+            <h3>客户快捷跳转</h3>
+            <span>点击定位到下方基础资料</span>
+          </div>
+          <div id="clientQuickCards" class="client-quick-cards"></div>
+        </section>
+
         <div class="clients-layout">
           <section class="panel">
             <div class="panel-title">
@@ -234,8 +249,14 @@
             </div>
             <div id="clientList" class="client-list"></div>
           </section>
+        </div>
 
-          <form id="clientForm" class="panel form-panel">
+        <div id="clientModal" class="modal-backdrop" hidden>
+          <form id="clientForm" class="modal-card form-panel">
+            <div class="panel-title">
+              <h3 id="clientModalTitle">编辑客户</h3>
+              <button id="closeClientModal" class="ghost-btn mini-action" type="button">取消</button>
+            </div>
             <input type="hidden" id="clientId" />
             <label>
               客户名称
@@ -318,10 +339,10 @@
             </label>
             <div class="form-actions">
               <button type="submit" class="primary-btn">保存客户</button>
+              <button type="button" id="cancelClientEdit" class="ghost-btn">取消</button>
               <button type="button" id="deleteClient" class="danger-btn">删除</button>
             </div>
           </form>
-
         </div>
       </section>
 
@@ -692,6 +713,10 @@
             <label>
               归属客户
               <select id="globalImportClient"></select>
+            </label>
+            <label id="globalNewClientWrap" hidden>
+              新客户名称
+              <input id="globalNewClientName" maxlength="30" placeholder="输入客户名称后确认创建" />
             </label>
             <label>
               文档类型
