@@ -44,6 +44,10 @@
           <button class="quick-tab" type="button" data-quick-target="clients">客户进度</button>
           <button class="quick-tab" type="button" data-scroll-target="todayTaskAnchor">今日任务</button>
           <button class="quick-tab" type="button" data-quick-target="dayplan">日/周计划</button>
+          <button class="quick-tab" type="button" data-dashboard-quadrant="ui">紧急重要</button>
+          <button class="quick-tab" type="button" data-dashboard-quadrant="un">紧急不重要</button>
+          <button class="quick-tab" type="button" data-dashboard-quadrant="ni">不紧急重要</button>
+          <button class="quick-tab" type="button" data-dashboard-quadrant="nn">不紧急不重要</button>
         </div>
         <section class="panel progress-top-panel">
           <div class="panel-title">
@@ -162,14 +166,14 @@
           <button id="dayCalendarJump" class="primary-btn" type="button">日历大盘</button>
         </div>
         <section class="day-week-board">
+          <section class="panel day-card plan-overview-card">
+            <div class="panel-title">
+              <h3>计划总览</h3>
+              <span>当前周期</span>
+            </div>
+            <div id="dayWeekSummary" class="day-week-summary"></div>
+          </section>
           <div class="day-week-columns">
-            <section class="panel day-card plan-side-card">
-              <div class="panel-title">
-                <h3>计划总览</h3>
-                <span>当前周期</span>
-              </div>
-              <div id="dayWeekSummary" class="day-week-summary"></div>
-            </section>
             <section class="panel day-card today-card">
               <div class="panel-title">
                 <h3>今日清单</h3>

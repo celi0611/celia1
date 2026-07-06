@@ -15,7 +15,7 @@ let draggingDayPlanId = "";
 let draggingWeekPlanId = "";
 let previousView = "dashboard";
 let draggingTaskId = "";
-let clientDetailEditMode = false;
+let editingDetailNoteId = "";
 let lastClientImport = null;
 let progressEditMode = false;
 
@@ -971,7 +971,13 @@ function renderClientDetail(clientId = selectedClientId) {
   const notes = notesForClient(client.id)
     .filter((note) => (note.planMonth || planMonthFromDate(note.publishDate)) === month)
     .sort(sortNotesForWork);
+  const publishedNotes = notes.filter((note) => note.status === "published");
   $("clientDetailContent").innerHTML = `
+    <div class="detail-jump-cards">
+      <button type="button" data-detail-jump="detailPlanSection">笔记规划</button>
+      <button type="button" data-detail-jump="detailDesignSection">设计提需</button>
+      <button type="button" data-detail-jump="detailPublishedSection">已发布笔记</button>
+    </div>
     <div class="detail-grid">
       <article>
         <h3>${escapeHtml(client.name)}</h3>
@@ -983,22 +989,25 @@ function renderClientDetail(clientId = selectedClientId) {
           <span class="tag">${reviewText(client.reviewMode)}</span>
         </div>
       </article>
-      <article><strong>主页链接</strong><p>${client.profileUrl ? escapeHtml(client.profileUrl) : "未填写"}</p></article>
+      <article><strong>主页链接</strong><p class="text-ellipsis" title="${escapeHtml(client.profileUrl || "")}">${client.profileUrl ? escapeHtml(client.profileUrl) : "未填写"}</p></article>
       <article><strong>账号简介</strong><p>${client.bio ? escapeHtml(client.bio) : "未填写"}</p></article>
       <article><strong>发布偏好</strong><p>${client.publishDays ? escapeHtml(client.publishDays) : "未填写"}</p></article>
       <article><strong>客户注意点</strong><p>${client.attention ? escapeHtml(client.attention) : "未填写"}</p></article>
       <article><strong>资料备注</strong><p>${client.notes ? escapeHtml(client.notes) : "未填写"}</p></article>
     </div>
-    <section class="plan-section">
+    <section id="detailPlanSection" class="plan-section">
       <div class="section-head">
         <h4>${monthLabel(month)}笔记规划 <span class="tag">${notes.length} 篇</span></h4>
-        <div class="panel-actions">
-          <button class="ghost-btn mini-action" type="button" data-client-plan-edit>${clientDetailEditMode ? "退出编辑" : "编辑"}</button>
-        </div>
       </div>
-      <div class="mini-note-list detail-note-list">${notes.length ? notes.map((note) => (clientDetailEditMode ? detailNoteEditHtml(note) : miniNoteHtml(note))).join("") : emptyHtml("暂无该月规划。")}</div>
+      <div class="mini-note-list detail-note-list">${notes.length ? notes.map((note) => (editingDetailNoteId === note.id ? detailNoteEditHtml(note) : miniNoteHtml(note))).join("") : emptyHtml("暂无该月规划。")}</div>
     </section>
     ${clientDesignSectionHtml(client, month)}
+    <section id="detailPublishedSection" class="plan-section">
+      <div class="section-head">
+        <h4>已发布笔记 <span class="tag">${publishedNotes.length} 篇</span></h4>
+      </div>
+      <div class="mini-note-list">${publishedNotes.length ? publishedNotes.map(miniNoteHtml).join("") : emptyHtml("暂无已发布笔记。")}</div>
+    </section>
   `;
 }
 
@@ -1009,7 +1018,7 @@ function clientDesignSectionHtml(client, month) {
   const pending = rows.filter((note) => note.status !== "published" && note.needDesign === "yes");
   const published = rows.filter((note) => note.status === "published");
   return `
-    <section class="plan-section client-design-section">
+    <section id="detailDesignSection" class="plan-section client-design-section">
       <div class="section-head">
         <h4>设计提需 <span class="tag">${pending.length} 条待处理</span></h4>
       </div>
@@ -1103,6 +1112,7 @@ function detailNoteEditHtml(note) {
           插入/替换图片
           <input data-detail-image-note="${note.id}" type="file" accept="image/*" />
         </label>
+        <button class="ghost-btn mini-action" type="button" data-detail-note-done="${note.id}">完成</button>
         <button class="danger-btn mini-action" type="button" data-detail-image-delete="${note.id}">删除图片</button>
       </div>
     </article>
@@ -1203,13 +1213,19 @@ function miniNoteHtml(note) {
     <div class="mini-note" data-note-id="${note.id}">
       <div class="item-head">
         <strong>${escapeHtml(note.title)}</strong>
-        ${statusSelectHtml(note)}
+        <div class="task-actions">
+          ${statusSelectHtml(note)}
+          <select class="mini-note-menu" data-detail-note-menu="${note.id}">
+            <option value="">操作</option>
+            <option value="edit">编辑</option>
+          </select>
+        </div>
       </div>
       <div class="mini-note-grid">
         ${note.image ? `<img class="note-thumb" src="${escapeHtml(note.image)}" alt="参考图片" />` : `<div class="image-preview">暂无图片</div>`}
         <div>
           <div class="plan-meta">
-            <span>${formatDate(note.publishDate)}</span>
+            <span class="plan-date-inline detail-note-date">${formatDate(note.publishDate)}</span>
             <span>${escapeHtml(note.type)}</span>
             <span>${note.needDesign === "yes" ? "需设计" : "不需设计"}</span>
           </div>
@@ -2470,8 +2486,17 @@ document.querySelectorAll(".back-btn").forEach((button) => {
 
 document.querySelectorAll(".quick-tab").forEach((button) => {
   button.addEventListener("click", () => {
-    if (button.dataset.quickTarget) {
+  if (button.dataset.quickTarget) {
       goView(button.dataset.quickTarget);
+      return;
+    }
+    if (button.dataset.dashboardQuadrant) {
+      const target = document.querySelector(`[data-quadrant="${button.dataset.dashboardQuadrant}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        target.classList.add("flash-card");
+        window.setTimeout(() => target.classList.remove("flash-card"), 1500);
+      }
       return;
     }
     const target = $(button.dataset.scrollTarget);
@@ -2845,46 +2870,37 @@ $("clientList").addEventListener("change", (event) => {
 });
 
 $("clientDetailContent").addEventListener("click", (event) => {
-  const importButton = event.target.closest("[data-client-import]");
-  if (importButton) {
-    const input = document.getElementById("clientImportFile");
-    if (input) {
-      input.value = "";
-      input.click();
+  const jump = event.target.closest("[data-detail-jump]");
+  if (jump) {
+    const target = document.getElementById(jump.dataset.detailJump);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      target.classList.add("flash-card");
+      window.setTimeout(() => target.classList.remove("flash-card"), 1400);
     }
-    return;
-  }
-  const undoButton = event.target.closest("[data-client-import-undo]");
-  if (undoButton) {
-    undoLastClientImport();
-    return;
-  }
-  const edit = event.target.closest("[data-client-plan-edit]");
-  if (edit) {
-    clientDetailEditMode = !clientDetailEditMode;
-    renderClientDetail();
-    showToast(clientDetailEditMode ? "已进入笔记规划编辑" : "已退出编辑并保存");
     return;
   }
   const delImage = event.target.closest("[data-detail-image-delete]");
   if (delImage) {
     updateNoteField(delImage.dataset.detailImageDelete, "image", "");
+    return;
+  }
+  const done = event.target.closest("[data-detail-note-done]");
+  if (done) {
+    editingDetailNoteId = "";
+    renderClientDetail();
+    showToast("本条笔记已收起");
   }
 });
 
 $("clientDetailContent").addEventListener("change", async (event) => {
-  const importInput = event.target.closest("#clientImportFile");
-  if (importInput) {
-    const file = importInput.files?.[0];
-    if (!file) return;
-    const lower = file.name.toLowerCase();
-    if (/\.(xlsx|xls|docx|doc)$/.test(lower)) {
-      showToast("当前浏览器版暂不直接解析Excel/Word，请先另存为TXT再导入");
-      return;
+  const menu = event.target.closest("[data-detail-note-menu]");
+  if (menu) {
+    if (menu.value === "edit") {
+      editingDetailNoteId = menu.dataset.detailNoteMenu;
+      renderClientDetail();
+      showToast("已打开本条笔记编辑");
     }
-    const text = await file.text();
-    const clientId = selectedClientId || state.clients[0]?.id;
-    importPlanningForClient(clientId, text, file.name);
     return;
   }
   const statusSelect = event.target.closest("[data-status-note]");

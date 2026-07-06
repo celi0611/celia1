@@ -382,18 +382,29 @@ h1 {
 
 .day-week-columns {
   display: grid;
-  grid-template-columns: minmax(260px, 0.8fr) minmax(320px, 1.2fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px;
+  position: relative;
   align-items: start;
+}
+
+.day-week-columns::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: #ecc0d1;
+  transform: translateX(-9px);
 }
 
 .day-card {
   border: 2px solid #ecc0d1;
 }
 
-.plan-side-card {
-  grid-column: 1;
-  grid-row: 1 / span 2;
+.plan-overview-card {
+  margin-bottom: 18px;
 }
 
 .week-card {
@@ -402,12 +413,13 @@ h1 {
 }
 
 .today-card {
-  grid-column: 2;
-  grid-row: 2;
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .day-week-summary {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -1885,6 +1897,22 @@ textarea:focus {
   gap: 14px;
 }
 
+.detail-jump-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.detail-jump-cards button {
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff8fb;
+  color: var(--red);
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .detail-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -1900,6 +1928,31 @@ textarea:focus {
 
 .detail-grid article:first-child {
   grid-column: 1 / -1;
+}
+
+.text-ellipsis {
+  display: block;
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-note-menu {
+  width: 82px;
+  min-width: 82px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.detail-note-date {
+  font-size: 18px;
+  font-weight: 900;
 }
 
 .settings-panel {
@@ -1972,11 +2025,15 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
-  .plan-side-card,
+  .plan-overview-card,
   .week-card,
   .today-card {
     grid-column: auto;
     grid-row: auto;
+  }
+
+  .day-week-columns::before {
+    display: none;
   }
 }
 
