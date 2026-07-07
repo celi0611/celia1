@@ -24,30 +24,30 @@
         <section class="nav-group" data-nav-group="content">
           <button class="nav-group-title" type="button" data-nav-group-toggle="content"><span>✎ 内容创作</span><b>⌄</b></button>
           <div class="nav-group-items">
-            <button class="nav-btn" data-view="notes" data-icon="排" title="笔记排期"><span class="nav-icon">排</span><span class="nav-text">排期</span></button>
+            <button class="nav-btn" data-view="notes" data-icon="排" title="笔记排期"><span class="nav-icon nav-rabbit-icon"><img src="./assets/nav-notes-rabbit.png" alt="" /></span><span class="nav-text">排期</span></button>
             <button class="nav-btn" data-view="types" data-icon="型" title="笔记类型"><span class="nav-icon">型</span><span class="nav-text">类型</span></button>
-            <button class="nav-btn" data-view="brands" data-icon="参" title="品牌参考"><span class="nav-icon">参</span><span class="nav-text">参考</span></button>
+            <button class="nav-btn" data-view="brands" data-icon="参" title="品牌参考"><span class="nav-icon nav-rabbit-icon"><img src="./assets/nav-brand-rabbit.png" alt="" /></span><span class="nav-text">品牌参考</span></button>
           </div>
         </section>
         <section class="nav-group" data-nav-group="client">
           <button class="nav-group-title" type="button" data-nav-group-toggle="client"><span>▣ 客户规划</span><b>⌄</b></button>
           <div class="nav-group-items">
-            <button class="nav-btn" data-view="clients" data-icon="客" title="客户管理"><span class="nav-icon">客</span><span class="nav-text">客户</span></button>
-            <button class="nav-btn" data-view="plans" data-icon="月" title="月度规划"><span class="nav-icon">月</span><span class="nav-text">月规</span></button>
+            <button class="nav-btn" data-view="clients" data-icon="客" title="客户管理"><span class="nav-icon nav-rabbit-icon"><img src="./assets/nav-client-rabbit.png" alt="" /></span><span class="nav-text">客户</span></button>
+            <button class="nav-btn" data-view="plans" data-icon="月" title="月度规划"><span class="nav-icon nav-rabbit-icon"><img src="./assets/nav-plans-rabbit.png" alt="" /></span><span class="nav-text">月度规划</span></button>
           </div>
         </section>
         <section class="nav-group" data-nav-group="report">
           <button class="nav-group-title" type="button" data-nav-group-toggle="report"><span>▤ 报表管理</span><b>⌄</b></button>
           <div class="nav-group-items">
-            <button class="nav-btn" data-view="reports" data-icon="报" title="周月报管理"><span class="nav-icon">报</span><span class="nav-text">周月报</span></button>
+            <button class="nav-btn" data-view="reports" data-icon="报" title="周月报管理"><span class="nav-icon nav-rabbit-icon"><img src="./assets/nav-reports-rabbit.png" alt="" /></span><span class="nav-text">周月报</span></button>
           </div>
         </section>
         <div class="nav-toolbox">
           <div class="nav-toolbox-title">工具箱</div>
-          <button class="nav-btn toolbox-nav" data-view="tools" data-icon="工" title="工具箱"><span class="nav-icon">工</span><span class="nav-text">工具箱</span></button>
+          <button class="nav-btn toolbox-nav" data-view="tools" data-icon="箱" title="工具箱"><span class="nav-icon nav-box-icon">箱</span><span class="nav-text">工具箱</span></button>
         </div>
         <div class="nav-bottom">
-          <button class="nav-btn" data-view="settings" data-icon="备" title="数据备份"><span class="nav-icon">备</span><span class="nav-text">备份</span></button>
+          <button class="nav-btn" data-view="settings" data-icon="云" title="数据备份"><span class="nav-icon nav-cloud-icon">云</span><span class="nav-text">备份</span></button>
         </div>
       </nav>
       <div class="sidebar-foot">
@@ -138,22 +138,22 @@
           <article class="metric">
             <span>服务客户</span>
             <strong id="metricClients">0</strong>
-            <button class="ghost-btn mini-action" type="button" data-metric-edit="clients">编辑</button>
+            <button class="ghost-btn mini-action metric-edit-btn" type="button" data-metric-edit="clients" title="编辑服务客户" aria-label="编辑服务客户">✎</button>
           </article>
           <article class="metric">
             <span>本月已发</span>
             <strong id="metricPublished">0</strong>
-            <button class="ghost-btn mini-action" type="button" data-metric-edit="published">编辑</button>
+            <button class="ghost-btn mini-action metric-edit-btn" type="button" data-metric-edit="published" title="编辑本月已发" aria-label="编辑本月已发">✎</button>
           </article>
           <article class="metric">
             <span>待审核</span>
             <strong id="metricReview">0</strong>
-            <button class="ghost-btn mini-action" type="button" data-metric-edit="review">编辑</button>
+            <button class="ghost-btn mini-action metric-edit-btn" type="button" data-metric-edit="review" title="编辑待审核" aria-label="编辑待审核">✎</button>
           </article>
           <article class="metric">
             <span>本周待发</span>
             <strong id="metricWeek">0</strong>
-            <button class="ghost-btn mini-action" type="button" data-metric-edit="week">编辑</button>
+            <button class="ghost-btn mini-action metric-edit-btn" type="button" data-metric-edit="week" title="编辑本周待发" aria-label="编辑本周待发">✎</button>
           </article>
         </div>
 
@@ -292,10 +292,6 @@
               <button id="closeClientModal" class="ghost-btn mini-action" type="button">取消</button>
             </div>
             <input type="hidden" id="clientId" />
-            <label>
-              客户名称
-              <input id="clientName" required placeholder="例如：某某烤肉" />
-            </label>
             <div class="form-row">
               <label>
                 客户类型
@@ -304,6 +300,16 @@
                   <option value="old">老客户</option>
                 </select>
               </label>
+              <label id="clientNameInputWrap">
+                客户名称
+                <input id="clientName" required placeholder="例如：某某烤肉" />
+              </label>
+              <label id="clientExistingWrap" hidden>
+                客户名称
+                <select id="clientExistingSelect"></select>
+              </label>
+            </div>
+            <div class="form-row">
               <label>
                 接手日期
                 <input id="clientStart" type="date" required />
@@ -403,6 +409,7 @@
           <div class="toolbar">
             <select id="planClientFilter"></select>
             <select id="planMonthFilter"></select>
+            <button id="addPlanNote" class="primary-btn" type="button">新增笔记</button>
           </div>
         </div>
         <section class="panel">
@@ -420,98 +427,7 @@
           <button id="resetNoteForm" class="primary-btn">新增笔记</button>
         </div>
 
-        <div class="split">
-          <form id="noteForm" class="panel form-panel">
-            <input type="hidden" id="noteId" />
-            <label>
-              所属客户
-              <select id="noteClient" required></select>
-            </label>
-            <label>
-              笔记主题
-              <input id="noteTitle" required placeholder="例如：双人套餐种草" />
-            </label>
-            <div class="form-row">
-              <label>
-                形式
-                <select id="noteType">
-                  <option value="图文">图文</option>
-                  <option value="视频">视频</option>
-                </select>
-              </label>
-              <label>
-                计划发布日
-                <input id="noteDate" type="date" required />
-              </label>
-            </div>
-            <div class="form-row">
-              <label>
-                规划月份
-                <input id="notePlanMonth" type="month" />
-              </label>
-              <label>
-                所属栏目
-                <select id="notePlanKind">
-                  <option value="monthly">月度规划</option>
-                  <option value="backup">备选方案</option>
-                </select>
-              </label>
-            </div>
-            <div class="form-row">
-              <label>
-                状态
-                <select id="noteStatus">
-                  <option value="idea">待选题</option>
-                  <option value="design">待设计</option>
-                  <option value="copy">待文案</option>
-                  <option value="production">待制作</option>
-                  <option value="review">待客户审核</option>
-                  <option value="scheduled">待发布</option>
-                  <option value="published">已发布</option>
-                </select>
-              </label>
-              <label>
-                需要设计
-                <select id="noteDesign">
-                  <option value="yes">需要</option>
-                  <option value="no">不需要</option>
-                </select>
-              </label>
-            </div>
-            <label>
-              图片制作
-              <select id="noteImageOwner">
-                <option value="design">设计制作图片</option>
-                <option value="self">自己制作图片</option>
-              </select>
-            </label>
-            <label>
-              选题标签
-              <input id="noteTags" placeholder="例如：探店招募、场景营销，最多建议 1-2 个" />
-            </label>
-            <label>
-              活动/卖点
-              <textarea id="noteAngle" rows="3" placeholder="套餐、到店有礼、探店方向、菜品卖点"></textarea>
-            </label>
-            <label>
-              笔记文案
-              <textarea id="noteCopywriting" rows="6" placeholder="标题、正文、话题、发布说明都可以写在这里"></textarea>
-            </label>
-            <label>
-              参考图片
-              <input id="noteImage" type="file" accept="image/*" />
-            </label>
-            <div id="noteImagePreview" class="image-preview empty">暂无参考图片</div>
-            <label>
-              审核备注
-              <textarea id="noteReviewNote" rows="2" placeholder="客户反馈、是否可到点先发"></textarea>
-            </label>
-            <div class="form-actions">
-              <button type="submit" class="primary-btn">保存笔记</button>
-              <button type="button" id="deleteNote" class="danger-btn">删除</button>
-            </div>
-          </form>
-
+        <div class="split notes-layout">
           <section class="panel">
             <div class="panel-title">
               <h3>排期列表</h3>
@@ -521,7 +437,7 @@
                 <select id="noteFilterKind">
                   <option value="all">全部栏目</option>
                   <option value="monthly">月度规划</option>
-                  <option value="backup">备选方案</option>
+                  <option value="backup">备选方案规划</option>
                 </select>
                 <select id="noteFilterPublish">
                   <option value="all">全部</option>
@@ -530,12 +446,15 @@
                 </select>
                 <select id="noteFilterSubStatus">
                   <option value="all">全部状态</option>
+                  <option value="communicate">待沟通</option>
+                  <option value="confirm">待确定</option>
                   <option value="idea">待选题</option>
                   <option value="design">待设计/提需</option>
                   <option value="copy">待文案</option>
                   <option value="production">待制作</option>
                   <option value="review">待客户审核</option>
                   <option value="scheduled">待发布</option>
+                  <option value="paused">暂搁置</option>
                 </select>
                 <select id="noteFilterTag"></select>
                 <button id="createMonthPlan" class="ghost-btn">生成本月 10 篇</button>
@@ -544,6 +463,13 @@
             <div id="noteProgressOverview" class="progress-overview"></div>
             <div id="noteList" class="note-list"></div>
           </section>
+          <section class="panel next-note-panel">
+            <div class="panel-title">
+              <h3>下期笔记预览</h3>
+              <button class="ghost-btn mini-action preview-edit-icon" type="button" data-next-note-edit-first title="编辑下期笔记" aria-label="编辑下期笔记">✎</button>
+            </div>
+            <div id="nextNotePreviewList" class="next-note-list"></div>
+          </section>
         </div>
       </section>
 
@@ -551,7 +477,7 @@
         <div class="topbar">
           <button class="ghost-btn back-btn" type="button">返回上一层</button>
           <div>
-            <h2>笔记类型</h2>
+            <h2 class="type-title-with-avatar"><img src="./assets/rabbit-sidebar-cutout.png" alt="" />笔记类型</h2>
             <p>按标签查看过往已发布笔记，复用相似选题。</p>
           </div>
           <div class="toolbar">
@@ -576,30 +502,23 @@
           <section class="panel brand-list-panel">
             <div class="panel-title">
               <h3>对标品牌列表</h3>
-              <span id="brandCount">0 个</span>
+              <div class="panel-actions">
+                <span id="brandCount">0 个</span>
+                <button id="resetBrandForm" class="ghost-btn mini-action" type="button">新增品牌</button>
+              </div>
             </div>
             <input id="brandSearch" class="brand-search" placeholder="搜索品牌名称或链接" />
-            <div id="brandList" class="brand-list"></div>
+            <div class="brand-columns">
+              <section>
+                <h3>品牌参考</h3>
+                <div id="brandList" class="brand-list"></div>
+              </section>
+              <section>
+                <h3>本地生活品牌参考</h3>
+                <div id="localBrandList" class="brand-list"></div>
+              </section>
+            </div>
           </section>
-          <form id="brandForm" class="panel form-panel brand-editor">
-            <div class="panel-title">
-              <h3>品牌信息</h3>
-              <button id="resetBrandForm" class="ghost-btn mini-action" type="button">新增品牌</button>
-            </div>
-            <input type="hidden" id="brandId" />
-            <label>
-              品牌名称
-              <input id="brandName" placeholder="例如：卫龙辣条" required />
-            </label>
-            <label>
-              小红书主页链接
-              <input id="brandUrl" placeholder="粘贴小红书主页链接" required />
-            </label>
-            <div class="form-actions">
-              <button class="primary-btn" type="submit">保存品牌</button>
-              <button id="deleteBrand" class="danger-btn" type="button">删除</button>
-            </div>
-          </form>
         </div>
       </section>
 
@@ -615,29 +534,20 @@
           <section class="panel">
             <div class="panel-title">
               <h3>外链工具</h3>
-              <span id="toolCount">0 个</span>
+              <div class="panel-actions">
+                <span id="toolCount">0 个</span>
+                <button id="resetToolForm" class="ghost-btn mini-action" type="button">新增工具</button>
+              </div>
             </div>
             <div id="toolList" class="tool-list"></div>
           </section>
-          <form id="toolForm" class="panel form-panel">
+          <section class="panel">
             <div class="panel-title">
-              <h3>工具信息</h3>
-              <button id="resetToolForm" class="ghost-btn mini-action" type="button">新增工具</button>
+              <h3>私域</h3>
+              <span id="privateToolCount">0 个</span>
             </div>
-            <input type="hidden" id="toolId" />
-            <label>
-              工具标题
-              <input id="toolTitle" maxlength="24" placeholder="例如：小红书后台" required />
-            </label>
-            <label>
-              外部网址
-              <input id="toolUrl" placeholder="https://..." required />
-            </label>
-            <div class="form-actions">
-              <button class="primary-btn" type="submit">保存工具</button>
-              <button id="deleteTool" class="danger-btn" type="button">删除</button>
-            </div>
-          </form>
+            <div id="privateToolList" class="tool-list"></div>
+          </section>
         </div>
       </section>
 
@@ -800,6 +710,190 @@
         </section>
       </section>
     </main>
+
+    <div id="brandModal" class="modal-backdrop" hidden>
+      <form id="brandForm" class="modal-card form-panel">
+        <div class="panel-title">
+          <h3>品牌信息</h3>
+          <button id="closeBrandModal" class="ghost-btn mini-action" type="button">取消</button>
+        </div>
+        <input type="hidden" id="brandId" />
+        <label>
+          品牌名称
+          <input id="brandName" placeholder="例如：卫龙辣条" required />
+        </label>
+        <label>
+          小红书主页链接
+          <input id="brandUrl" placeholder="粘贴小红书主页链接" required />
+        </label>
+        <label>
+          品牌类目
+          <input id="brandCategoryTags" placeholder="例如：茶饮、本地生活、火锅，可用顿号或逗号分隔" />
+        </label>
+        <div id="brandCategoryTagPreview" class="tag-row"></div>
+        <label>
+          归属栏目
+          <select id="brandCategory">
+            <option value="brand">品牌参考</option>
+            <option value="local">本地生活品牌参考</option>
+          </select>
+        </label>
+        <div class="form-actions">
+          <button class="primary-btn" type="submit">保存品牌</button>
+          <button id="deleteBrand" class="danger-btn" type="button">删除</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="toolModal" class="modal-backdrop" hidden>
+      <form id="toolForm" class="modal-card form-panel">
+        <div class="panel-title">
+          <h3>工具信息</h3>
+          <button id="closeToolModal" class="ghost-btn mini-action" type="button">取消</button>
+        </div>
+        <input type="hidden" id="toolId" />
+        <label>
+          工具标题
+          <input id="toolTitle" maxlength="24" placeholder="例如：小红书后台" required />
+        </label>
+        <label>
+          外部网址
+          <input id="toolUrl" placeholder="https://..." required />
+        </label>
+        <label>
+          归属栏目
+          <select id="toolCategory">
+            <option value="external">外链工具</option>
+            <option value="private">私域</option>
+          </select>
+        </label>
+        <div class="form-actions">
+          <button class="primary-btn" type="submit">保存工具</button>
+          <button id="deleteTool" class="danger-btn" type="button">删除</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="importPreviewModal" class="modal-backdrop" hidden>
+      <section class="modal-card form-panel">
+        <div class="panel-title">
+          <h3>文档解析预览核验</h3>
+          <button id="cancelImportPreview" class="ghost-btn mini-action" type="button">取消</button>
+        </div>
+        <p class="helper-text">请先核对识别内容，可直接修改下方 JSON；确认后才会正式导入业务板块。</p>
+        <textarea id="importPreviewText" class="mail-template-editor" rows="16"></textarea>
+        <div class="form-actions">
+          <button id="confirmImportPreview" class="primary-btn" type="button">确认导入</button>
+          <button id="closeImportPreview" class="ghost-btn" type="button">放弃导入</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="noteModal" class="modal-backdrop" hidden>
+      <form id="noteForm" class="modal-card form-panel note-modal-card">
+        <div class="panel-title modal-fixed-head">
+          <h3 id="noteModalTitle">新增笔记</h3>
+          <button id="closeNoteModal" class="ghost-btn mini-action" type="button">取消</button>
+        </div>
+        <div class="modal-scroll-body">
+          <input type="hidden" id="noteId" />
+          <label>
+            所属客户
+            <select id="noteClient" required></select>
+          </label>
+          <label>
+            笔记主题
+            <input id="noteTitle" required placeholder="例如：双人套餐种草" />
+          </label>
+          <div class="form-row">
+            <label>
+              形式
+              <select id="noteType">
+                <option value="图文">图文</option>
+                <option value="视频">视频</option>
+              </select>
+            </label>
+            <label>
+              计划发布日
+              <input id="noteDate" type="date" required />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              规划月份
+              <input id="notePlanMonth" type="month" />
+            </label>
+            <label>
+              所属栏目
+              <select id="notePlanKind">
+                <option value="monthly">月度规划</option>
+                <option value="backup">备选方案规划</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              状态
+              <select id="noteStatus">
+                <option value="communicate">待沟通</option>
+                <option value="confirm">待确定</option>
+                <option value="idea">待选题</option>
+                <option value="design">待设计</option>
+                <option value="copy">待文案</option>
+                <option value="production">待制作</option>
+                <option value="review">待客户审核</option>
+                <option value="scheduled">待发布</option>
+                <option value="published">已发布</option>
+                <option value="paused">暂搁置</option>
+              </select>
+            </label>
+            <label>
+              需要设计
+              <select id="noteDesign">
+                <option value="yes">需要</option>
+                <option value="no">不需要</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            图片制作
+            <select id="noteImageOwner">
+              <option value="design">设计制作图片</option>
+              <option value="self">自己制作图片</option>
+            </select>
+          </label>
+          <label>
+            选题标签
+            <input id="noteTags" placeholder="例如：探店招募、场景营销，最多建议 1-2 个" />
+          </label>
+          <label>
+            活动/卖点
+            <textarea id="noteAngle" rows="3" placeholder="套餐、到店有礼、探店方向、菜品卖点"></textarea>
+          </label>
+          <label>
+            笔记文案
+            <textarea id="noteCopywriting" rows="6" placeholder="标题、正文、话题、发布说明都可以写在这里"></textarea>
+          </label>
+          <label>
+            参考图片
+            <input id="noteImage" type="file" accept="image/*" />
+          </label>
+          <div id="noteImagePreview" class="image-preview empty">暂无参考图片</div>
+          <label>
+            审核备注
+            <textarea id="noteReviewNote" rows="2" placeholder="客户反馈、是否可到点先发"></textarea>
+          </label>
+          <label>
+            笔记链接
+            <input id="noteLink" placeholder="已发布后粘贴小红书笔记链接" />
+          </label>
+        </div>
+        <div class="form-actions modal-fixed-actions">
+          <button type="submit" class="primary-btn">保存笔记</button>
+          <button type="button" id="deleteNote" class="danger-btn">删除</button>
+        </div>
+      </form>
+    </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <div id="taskEditModal" class="modal-backdrop" hidden>

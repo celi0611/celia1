@@ -50,6 +50,7 @@ function normalizeLedger(input) {
     reportTemplates: input?.reportTemplates && typeof input.reportTemplates === "object" ? input.reportTemplates : {},
     progressOverrides: input?.progressOverrides && typeof input.progressOverrides === "object" ? input.progressOverrides : {},
     plannedOverrides: input?.plannedOverrides && typeof input.plannedOverrides === "object" ? input.plannedOverrides : {},
+    progressRemarks: input?.progressRemarks && typeof input.progressRemarks === "object" ? input.progressRemarks : {},
     dashboardMetricOverrides: input?.dashboardMetricOverrides && typeof input.dashboardMetricOverrides === "object" ? input.dashboardMetricOverrides : {},
     mailTemplate: typeof input?.mailTemplate === "string" ? input.mailTemplate : "",
     updatedAt: new Date().toISOString(),

@@ -2,7 +2,7 @@ const STORAGE_KEY = "xhs-ledger-v2";
 const UI_STORAGE_KEY = "xhs-ledger-ui-v1";
 const API_BASE = "";
 
-let state = { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], toolRefs: [], reportTemplates: {}, progressOverrides: {}, plannedOverrides: {}, dashboardMetricOverrides: {}, mailTemplate: "" };
+let state = { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], toolRefs: [], reportTemplates: {}, progressOverrides: {}, plannedOverrides: {}, progressRemarks: {}, dashboardMetricOverrides: {}, mailTemplate: "" };
 let backendOnline = false;
 let backendMode = "local";
 let selectedClientId = "";
@@ -20,9 +20,22 @@ let editingDetailNoteId = "";
 let lastClientImport = null;
 let progressEditMode = false;
 let editingTaskId = "";
+let pendingImportPreview = null;
 let uiState = { sidebarCollapsed: false, navGroups: { content: true, client: true, report: true } };
 
 const $ = (id) => document.getElementById(id);
+const NOTE_STATUS_OPTIONS = [
+  ["communicate", "待沟通"],
+  ["confirm", "待确定"],
+  ["idea", "待选题"],
+  ["design", "待设计"],
+  ["copy", "待文案"],
+  ["production", "待制作"],
+  ["review", "待客户审核"],
+  ["scheduled", "待发布"],
+  ["published", "已发布"],
+  ["paused", "暂搁置"],
+];
 const today = startOfDay(new Date());
 selectedCalendarDate = dateValue(today);
 selectedDayCalendarDate = dateValue(today);
@@ -30,7 +43,7 @@ selectedDayPlanDate = dateValue(today);
 selectedWeekPlanWeek = weekKey(today);
 
 function emptyState() {
-  return { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], toolRefs: [], reportTemplates: {}, progressOverrides: {}, plannedOverrides: {}, dashboardMetricOverrides: {}, mailTemplate: defaultMailTemplate() };
+  return { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], toolRefs: [], reportTemplates: {}, progressOverrides: {}, plannedOverrides: {}, progressRemarks: {}, dashboardMetricOverrides: {}, mailTemplate: defaultMailTemplate() };
 }
 
 function bootstrapState() {
@@ -91,6 +104,7 @@ function preferNonEmptyData(primary, fallback) {
       reportTemplates: Object.keys(normalizedPrimary.reportTemplates).length ? normalizedPrimary.reportTemplates : normalizedFallback.reportTemplates,
       progressOverrides: Object.keys(normalizedPrimary.progressOverrides).length ? normalizedPrimary.progressOverrides : normalizedFallback.progressOverrides,
       plannedOverrides: Object.keys(normalizedPrimary.plannedOverrides).length ? normalizedPrimary.plannedOverrides : normalizedFallback.plannedOverrides,
+      progressRemarks: Object.keys(normalizedPrimary.progressRemarks).length ? normalizedPrimary.progressRemarks : normalizedFallback.progressRemarks,
       dashboardMetricOverrides: Object.keys(normalizedPrimary.dashboardMetricOverrides).length ? normalizedPrimary.dashboardMetricOverrides : normalizedFallback.dashboardMetricOverrides,
       mailTemplate: normalizedPrimary.mailTemplate || normalizedFallback.mailTemplate,
     };
@@ -118,6 +132,7 @@ function loadLocalState() {
       reportTemplates: parsed.reportTemplates && typeof parsed.reportTemplates === "object" ? parsed.reportTemplates : {},
       progressOverrides: parsed.progressOverrides && typeof parsed.progressOverrides === "object" ? parsed.progressOverrides : {},
       plannedOverrides: parsed.plannedOverrides && typeof parsed.plannedOverrides === "object" ? parsed.plannedOverrides : {},
+      progressRemarks: parsed.progressRemarks && typeof parsed.progressRemarks === "object" ? parsed.progressRemarks : {},
       dashboardMetricOverrides: parsed.dashboardMetricOverrides && typeof parsed.dashboardMetricOverrides === "object" ? parsed.dashboardMetricOverrides : {},
       mailTemplate: parsed.mailTemplate || defaultMailTemplate(),
     };
@@ -136,6 +151,7 @@ async function loadState() {
     if (!Object.prototype.hasOwnProperty.call(data, "brandRefs")) data.brandRefs = local.brandRefs;
     if (!Object.prototype.hasOwnProperty.call(data, "toolRefs")) data.toolRefs = local.toolRefs;
     if (!Object.prototype.hasOwnProperty.call(data, "progressOverrides")) data.progressOverrides = local.progressOverrides;
+    if (!Object.prototype.hasOwnProperty.call(data, "progressRemarks")) data.progressRemarks = local.progressRemarks;
     if (!Object.prototype.hasOwnProperty.call(data, "mailTemplate")) data.mailTemplate = local.mailTemplate;
     backendOnline = true;
     await loadBackendMode();
@@ -152,6 +168,7 @@ async function loadState() {
         if (!Object.prototype.hasOwnProperty.call(staticData, "brandRefs")) staticData.brandRefs = local.brandRefs;
         if (!Object.prototype.hasOwnProperty.call(staticData, "toolRefs")) staticData.toolRefs = local.toolRefs;
         if (!Object.prototype.hasOwnProperty.call(staticData, "progressOverrides")) staticData.progressOverrides = local.progressOverrides;
+        if (!Object.prototype.hasOwnProperty.call(staticData, "progressRemarks")) staticData.progressRemarks = local.progressRemarks;
         if (!Object.prototype.hasOwnProperty.call(staticData, "mailTemplate")) staticData.mailTemplate = local.mailTemplate;
         return preferNonEmptyData(staticData, window.__LEDGER_BOOTSTRAP__);
       }
@@ -214,6 +231,7 @@ function normalizeState(data) {
     reportTemplates: data?.reportTemplates && typeof data.reportTemplates === "object" ? data.reportTemplates : {},
     progressOverrides: data?.progressOverrides && typeof data.progressOverrides === "object" ? data.progressOverrides : {},
     plannedOverrides: data?.plannedOverrides && typeof data.plannedOverrides === "object" ? data.plannedOverrides : {},
+    progressRemarks: data?.progressRemarks && typeof data.progressRemarks === "object" ? data.progressRemarks : {},
     dashboardMetricOverrides: data?.dashboardMetricOverrides && typeof data.dashboardMetricOverrides === "object" ? data.dashboardMetricOverrides : {},
     mailTemplate: data?.mailTemplate || defaultMailTemplate(),
   };
@@ -239,13 +257,15 @@ function normalizeNote(note) {
     image: note.image || "",
     imageOwner: note.imageOwner || "design",
     copywriting: note.copywriting || "",
-    link: note.link || note.url || "",
+    link: note.link || note.noteLink || note.url || "",
   };
 }
 
 function normalizeBrand(brand) {
   return {
     ...brand,
+    category: brand.category || "brand",
+    categories: normalizeTags(brand.categories || brand.categoryTags || []),
     logo: "",
     logoUrl: "",
   };
@@ -256,6 +276,7 @@ function normalizeTool(tool) {
     id: tool.id || uid("tool"),
     title: tool.title || tool.name || "",
     url: tool.url || "",
+    category: tool.category || "external",
     updatedAt: tool.updatedAt || "",
   };
 }
@@ -490,6 +511,17 @@ function requireNonNegativeInteger(value, message = "只能输入非负整数") 
     return null;
   }
   return parsed;
+}
+
+function textareaRows(text) {
+  const lines = String(text || "").split("\n");
+  const estimated = lines.reduce((sum, line) => sum + Math.max(1, Math.ceil(line.length / 28)), 0);
+  return Math.min(14, Math.max(2, estimated));
+}
+
+function progressRemark(clientId) {
+  const month = currentPlanMonth();
+  return state.progressRemarks?.[month]?.[clientId] || "";
 }
 
 function dashboardMetricValue(key, autoValue) {
@@ -844,11 +876,12 @@ function renderWeekPlanWeekSelect() {
 }
 
 function dayPlanHtml(item, index = 0) {
+  const rows = textareaRows(item.text);
   return `
     <article class="day-plan-item ${item.done ? "done" : ""}" data-day-plan="${item.id}" draggable="true">
       <button class="check-square ${item.done ? "done" : ""}" data-day-plan-toggle="${item.id}" type="button" aria-label="完成"></button>
       <span class="day-plan-no">${index + 1}</span>
-      <textarea data-day-plan-text="${item.id}" rows="1">${escapeHtml(item.text)}</textarea>
+      <textarea data-day-plan-text="${item.id}" rows="${rows}">${escapeHtml(item.text)}</textarea>
       <span class="drag-handle" title="拖拽排序">⋮⋮</span>
       <button class="ghost-btn mini-action" data-day-plan-edit="${item.id}" type="button">编辑</button>
       <button class="danger-btn" data-day-plan-delete="${item.id}" type="button">删除</button>
@@ -857,11 +890,12 @@ function dayPlanHtml(item, index = 0) {
 }
 
 function weekPlanHtml(item, index = 0) {
+  const rows = textareaRows(item.text);
   return `
     <article class="day-plan-item week-item ${item.done ? "done" : ""}" data-week-plan="${item.id}" draggable="true">
       <button class="check-square ${item.done ? "done" : ""}" data-week-plan-toggle="${item.id}" type="button" aria-label="完成"></button>
       <span class="day-plan-no">${index + 1}</span>
-      <textarea data-week-plan-text="${item.id}" rows="1">${escapeHtml(item.text)}</textarea>
+      <textarea data-week-plan-text="${item.id}" rows="${rows}">${escapeHtml(item.text)}</textarea>
       <span class="drag-handle" title="拖拽排序">⋮⋮</span>
       <button class="ghost-btn mini-action" data-week-plan-edit="${item.id}" type="button">编辑</button>
       <button class="danger-btn" data-week-plan-delete="${item.id}" type="button">删除</button>
@@ -974,6 +1008,7 @@ function progressHtml(client) {
   const published = publishedThisMonth(client.id);
   const actualPublished = actualPublishedThisMonth(client.id);
   const actualPlanned = actualPlannedThisMonth(client.id);
+  const remark = progressRemark(client.id);
   const percent = Math.min(100, Math.round((published / target) * 100));
   return `
     <article class="progress-item">
@@ -994,7 +1029,10 @@ function progressHtml(client) {
         </div>
       ` : ""}
       <div class="bar green-bar"><span style="width:${percent}%"></span></div>
-      <p>本月已排 ${planned} 篇。${monthSummary(client.id, currentPlanMonth())}</p>
+      <div class="progress-remark-row ${remark ? "" : "empty"}">
+        <p data-progress-remark-text="${client.id}" contenteditable="false">${escapeHtml(remark)}</p>
+        <button class="ghost-btn mini-action remark-edit-btn" type="button" data-progress-remark-edit="${client.id}" title="编辑备注">✎</button>
+      </div>
     </article>
   `;
 }
@@ -1073,6 +1111,9 @@ function renderClientDetail(clientId = selectedClientId) {
       <button type="button" data-detail-jump="detailDesignSection">设计提需</button>
       <button type="button" data-detail-jump="detailPublishedSection">已发布笔记</button>
     </div>
+    <div class="form-actions detail-actions">
+      <button class="primary-btn" type="button" data-detail-edit-client="${client.id}">编辑</button>
+    </div>
     <div class="detail-grid">
       <article>
         <h3>${escapeHtml(client.name)}</h3>
@@ -1084,7 +1125,7 @@ function renderClientDetail(clientId = selectedClientId) {
           <span class="tag">${reviewText(client.reviewMode)}</span>
         </div>
       </article>
-      <article><strong>主页链接</strong><p class="text-ellipsis" title="${escapeHtml(client.profileUrl || "")}">${client.profileUrl ? escapeHtml(client.profileUrl) : "未填写"}</p></article>
+      <article><strong>主页链接</strong><p class="text-ellipsis" title="${escapeHtml(client.profileUrl || "")}">${client.profileUrl ? `<a href="${escapeHtml(normalizeExternalUrl(client.profileUrl))}" target="_blank" rel="noopener noreferrer">${escapeHtml(client.profileUrl)}</a>` : "未填写"}</p></article>
       <article><strong>账号简介</strong><p>${client.bio ? escapeHtml(client.bio) : "未填写"}</p></article>
       <article><strong>发布偏好</strong><p>${client.publishDays ? escapeHtml(client.publishDays) : "未填写"}</p></article>
       <article><strong>客户注意点</strong><p>${client.attention ? escapeHtml(client.attention) : "未填写"}</p></article>
@@ -1257,16 +1298,14 @@ function planClientHtml(client, month) {
         <div class="plan-card-grid">${monthly.length ? monthly.map(planCardHtml).join("") : emptyHtml("暂无月度规划。")}</div>
       </section>
       <section class="plan-section">
-        <h4>备选方案 <span class="tag">${backups.length} 篇</span></h4>
-        <div class="plan-card-grid">${backups.length ? backups.map(planCardHtml).join("") : emptyHtml("暂无备选方案。")}</div>
+        <h4>备选方案规划 <span class="tag">${backups.length} 篇</span></h4>
+        <div class="plan-card-grid">${backups.length ? backups.map(planCardHtml).join("") : emptyHtml("暂无备选方案规划。")}</div>
       </section>
     </article>
   `;
 }
 
 function planCardHtml(note) {
-  const angleRows = Math.min(18, Math.max(6, String(note.angle || "").split("\n").length + 3));
-  const copyRows = Math.min(18, Math.max(5, String(note.copywriting || "").split("\n").length + 3));
   return `
     <article class="plan-card ${note.status === "published" ? "published" : ""}" data-note-id="${note.id}">
       ${note.status === "published" ? `<div class="published-check">✓</div>` : ""}
@@ -1282,23 +1321,12 @@ function planCardHtml(note) {
         <span>${note.needDesign === "yes" ? "需设计" : "不需设计"}</span>
         <span>${note.imageOwner === "self" ? "自己做图" : "设计做图"}</span>
       </div>
-      <label>
-        Tag
-        <input data-note-field="tags" data-note-id="${note.id}" value="${escapeHtml(normalizeTags(note.tags).join("、"))}" />
-      </label>
-      <label>
-        内容概述
-        <textarea class="auto-textarea" data-note-field="angle" data-note-id="${note.id}" rows="${angleRows}">${escapeHtml(note.angle || "")}</textarea>
-      </label>
-      <label>
-        笔记文案
-        <textarea class="auto-textarea" data-note-field="copywriting" data-note-id="${note.id}" rows="${copyRows}">${escapeHtml(note.copywriting || "")}</textarea>
-      </label>
+      <div class="tag-row">${tagButtonsHtml(note.tags)}</div>
+      <p><strong>内容概述：</strong>${note.angle ? escapeHtml(note.angle) : "暂无内容概述。"}</p>
+      ${note.copywriting ? `<p><strong>笔记文案：</strong>${escapeHtml(note.copywriting)}</p>` : ""}
+      ${note.link ? `<a class="note-link" href="${escapeHtml(note.link)}" target="_blank" rel="noopener noreferrer">查看笔记链接</a>` : ""}
       ${note.image ? `<img class="note-thumb plan-image" src="${escapeHtml(note.image)}" alt="参考图片" />` : `<div class="image-preview empty">暂无参考图片</div>`}
-      <label class="ghost-btn file-btn">
-        插入参考图片
-        <input data-plan-image-note="${note.id}" type="file" accept="image/*" />
-      </label>
+      <button class="ghost-btn mini-action" type="button" data-open-note-modal="${note.id}">编辑</button>
     </article>
   `;
 }
@@ -1333,18 +1361,9 @@ function miniNoteHtml(note) {
 }
 
 function statusSelectHtml(note) {
-  const options = [
-    ["idea", "待选题"],
-    ["design", "待设计"],
-    ["copy", "待文案"],
-    ["production", "待制作"],
-    ["review", "待客户审核"],
-    ["scheduled", "待发布"],
-    ["published", "已发布"],
-  ];
   return `
     <select class="status-select" data-status-note="${note.id}">
-      ${options.map(([value, label]) => `<option value="${value}" ${note.status === value ? "selected" : ""}>${label}</option>`).join("")}
+      ${NOTE_STATUS_OPTIONS.map(([value, label]) => `<option value="${value}" ${note.status === value ? "selected" : ""}>${label}</option>`).join("")}
     </select>
   `;
 }
@@ -1368,6 +1387,33 @@ function renderNotes() {
 
   $("noteProgressOverview").innerHTML = noteProgressOverviewHtml(baseNotes, notes, monthFilter);
   $("noteList").innerHTML = notes.length ? notes.map(noteHtml).join("") : emptyHtml("还没有笔记排期。");
+  renderNextNotePreview();
+}
+
+function renderNextNotePreview() {
+  const list = $("nextNotePreviewList");
+  if (!list) return;
+  const rows = state.clients
+    .filter((client) => client.status !== "paused")
+    .map((client) => {
+      const next = notesForClient(client.id)
+        .filter((note) => note.status !== "published")
+        .sort(sortNotesForWork)[0];
+      return `
+        <article class="next-note-item" ${next ? `data-next-note-id="${next.id}"` : ""}>
+          <div class="item-head">
+            <strong>${escapeHtml(client.name)}</strong>
+            ${next ? `<button class="ghost-btn mini-action preview-edit-icon" type="button" data-next-note-edit="${next.id}" title="编辑下期笔记" aria-label="编辑下期笔记">✎</button>` : ""}
+          </div>
+          ${
+            next
+              ? `<p>${formatDate(next.publishDate)}｜${escapeHtml(next.title)}</p><div class="tag-row">${tagButtonsHtml(next.tags)}</div>`
+              : `<p class="muted">暂无待发布笔记</p>`
+          }
+        </article>
+      `;
+    });
+  list.innerHTML = rows.length ? rows.join("") : emptyHtml("暂无客户。");
 }
 
 function noteMatchesPublishFilter(note, filter) {
@@ -1472,21 +1518,26 @@ function renderBrands() {
   if (!$("brandList")) return;
   const keyword = ($("brandSearch")?.value || "").trim().toLowerCase();
   const rows = state.brandRefs.filter((brand) => {
-    const text = `${brand.name || ""} ${brand.url || ""}`.toLowerCase();
+    const text = `${brand.name || ""} ${brand.url || ""} ${normalizeTags(brand.categories || []).join(" ")}`.toLowerCase();
     return !keyword || text.includes(keyword);
   });
   $("brandCount").textContent = `${rows.length}/${state.brandRefs.length} 个`;
-  $("brandList").innerHTML = rows.length
-    ? rows.map(brandHtml).join("")
-    : emptyHtml("还没有品牌参考，先把常看的对标账号放进来。");
+  const normalRows = rows.filter((brand) => (brand.category || "brand") !== "local");
+  const localRows = rows.filter((brand) => (brand.category || "brand") === "local");
+  $("brandList").innerHTML = normalRows.length ? normalRows.map(brandHtml).join("") : emptyHtml("还没有品牌参考。");
+  if ($("localBrandList")) $("localBrandList").innerHTML = localRows.length ? localRows.map(brandHtml).join("") : emptyHtml("还没有本地生活品牌参考。");
 }
 
 function renderTools() {
   if (!$("toolList")) return;
-  $("toolCount").textContent = `${state.toolRefs.length} 个`;
-  $("toolList").innerHTML = state.toolRefs.length
-    ? state.toolRefs.map(toolHtml).join("")
+  const external = state.toolRefs.filter((tool) => (tool.category || "external") !== "private");
+  const privateTools = state.toolRefs.filter((tool) => (tool.category || "external") === "private");
+  $("toolCount").textContent = `${external.length} 个`;
+  $("toolList").innerHTML = external.length
+    ? external.map(toolHtml).join("")
     : emptyHtml("点击添加外链工具");
+  if ($("privateToolCount")) $("privateToolCount").textContent = `${privateTools.length} 个`;
+  if ($("privateToolList")) $("privateToolList").innerHTML = privateTools.length ? privateTools.map(toolHtml).join("") : emptyHtml("点击添加私域工具");
 }
 
 function toolHtml(tool) {
@@ -1505,6 +1556,17 @@ function fillToolForm(tool = null) {
   $("toolId").value = tool?.id || "";
   $("toolTitle").value = tool?.title || "";
   $("toolUrl").value = tool?.url || "";
+  $("toolCategory").value = tool?.category || "external";
+}
+
+function openToolModal(tool = null) {
+  fillToolForm(tool);
+  $("toolModal").hidden = false;
+  window.setTimeout(() => $("toolTitle")?.focus(), 80);
+}
+
+function closeToolModal() {
+  $("toolModal").hidden = true;
 }
 
 function collectToolForm() {
@@ -1512,6 +1574,7 @@ function collectToolForm() {
     id: $("toolId").value || uid("tool"),
     title: $("toolTitle").value.trim(),
     url: normalizeExternalUrl($("toolUrl").value.trim()),
+    category: $("toolCategory").value || "external",
     updatedAt: new Date().toISOString(),
   };
 }
@@ -1544,6 +1607,7 @@ function brandHtml(brand) {
       <div class="brand-copy">
         <strong>${escapeHtml(brand.name)}</strong>
         <a href="${escapeHtml(brand.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(brand.url)}">${escapeHtml(shortUrl(brand.url))}</a>
+        ${normalizeTags(brand.categories || []).length ? `<div class="tag-row">${tagButtonsHtml(brand.categories)}</div>` : ""}
       </div>
     </article>
   `;
@@ -1553,7 +1617,27 @@ function fillBrandForm(brand = null) {
   $("brandId").value = brand?.id || "";
   $("brandName").value = brand?.name || "";
   $("brandUrl").value = brand?.url || "";
+  $("brandCategoryTags").value = normalizeTags(brand?.categories || []).join("、");
+  $("brandCategory").value = brand?.category || "brand";
+  renderBrandCategoryPreview();
   renderBrands();
+}
+
+function renderBrandCategoryPreview() {
+  const box = $("brandCategoryTagPreview");
+  if (!box) return;
+  const tags = normalizeTags($("brandCategoryTags")?.value || "");
+  box.innerHTML = tags.length ? tagButtonsHtml(tags) : "";
+}
+
+function openBrandModal(brand = null) {
+  fillBrandForm(brand);
+  $("brandModal").hidden = false;
+  window.setTimeout(() => $("brandName")?.focus(), 80);
+}
+
+function closeBrandModal() {
+  $("brandModal").hidden = true;
 }
 
 function collectBrandForm() {
@@ -1562,6 +1646,8 @@ function collectBrandForm() {
     id: $("brandId").value || uid("brand"),
     name: $("brandName").value.trim(),
     url,
+    category: $("brandCategory").value || "brand",
+    categories: normalizeTags($("brandCategoryTags").value),
     logo: "",
     logoUrl: "",
     updatedAt: new Date().toISOString(),
@@ -1616,10 +1702,9 @@ function parseImportedPlanning(text) {
   };
 }
 
-function importPlanningForClient(clientId, text, fileName = "") {
+function applyParsedPlanningImport(clientId, parsed, fileName = "") {
   const client = clientById(clientId);
   if (!client) return showToast("请先打开客户详情");
-  const parsed = parseImportedPlanning(text);
   const importId = uid("import");
   const month = $("planMonthFilter")?.value || currentPlanMonth();
   const existingCount = notesForClient(clientId).filter((note) => note.planMonth === month).length;
@@ -1652,6 +1737,23 @@ function importPlanningForClient(clientId, text, fileName = "") {
   render();
   renderClientDetail(clientId);
   showToast(`导入成功，共拆解 ${newNotes.length} 条笔记，${parsed.positioning ? "已更新账号定位" : "未识别账号定位"}`);
+}
+
+function importPlanningForClient(clientId, text, fileName = "") {
+  const parsed = parseImportedPlanning(text);
+  pendingImportPreview = { clientId, fileName, parsed };
+  $("importPreviewText").value = JSON.stringify(
+    {
+      客户: clientName(clientId),
+      归属板块: {
+        客户基础资料: { 账号定位: parsed.positioning || "" },
+        月度规划: parsed.notes,
+      },
+    },
+    null,
+    2
+  );
+  $("importPreviewModal").hidden = false;
 }
 
 async function handleGlobalPlanningImport(file) {
@@ -2185,6 +2287,26 @@ function fillClientForm(client = null) {
   $("clientBio").value = client?.bio || "";
   $("clientAttention").value = client?.attention || "";
   $("clientNotes").value = client?.notes || "";
+  populateExistingClientOptions(selectedClientId);
+  updateClientNameMode();
+}
+
+function populateExistingClientOptions(selectedId = "") {
+  const select = $("clientExistingSelect");
+  if (!select) return;
+  select.innerHTML = state.clients.length
+    ? state.clients.map((client) => `<option value="${client.id}">${escapeHtml(client.name)}</option>`).join("")
+    : `<option value="">暂无老客户</option>`;
+  if (selectedId && state.clients.some((client) => client.id === selectedId)) select.value = selectedId;
+}
+
+function updateClientNameMode() {
+  const type = $("clientType")?.value || "new";
+  const oldMode = type === "old";
+  if ($("clientNameInputWrap")) $("clientNameInputWrap").hidden = oldMode;
+  if ($("clientExistingWrap")) $("clientExistingWrap").hidden = !oldMode;
+  if ($("clientName")) $("clientName").required = !oldMode;
+  if ($("clientExistingSelect")) $("clientExistingSelect").required = oldMode;
 }
 
 function openClientModal(client = null) {
@@ -2199,6 +2321,7 @@ function closeClientModal() {
 
 function fillNoteForm(note = null) {
   selectedNoteId = note?.id || "";
+  if ($("noteModalTitle")) $("noteModalTitle").textContent = note ? "编辑笔记" : "新增笔记";
   $("noteId").value = selectedNoteId;
   $("noteClient").value = note?.clientId || state.clients[0]?.id || "";
   $("noteTitle").value = note?.title || "";
@@ -2213,14 +2336,27 @@ function fillNoteForm(note = null) {
   $("noteAngle").value = note?.angle || "";
   $("noteCopywriting").value = note?.copywriting || "";
   $("noteReviewNote").value = note?.reviewNote || "";
+  $("noteLink").value = note?.link || "";
   $("noteImage").value = "";
   setImagePreview("noteImagePreview", note?.image || "", "暂无参考图片");
 }
 
+function openNoteModal(note = null) {
+  fillNoteForm(note);
+  $("noteModal").hidden = false;
+  window.setTimeout(() => $("noteTitle")?.focus(), 80);
+}
+
+function closeNoteModal() {
+  $("noteModal").hidden = true;
+}
+
 function collectClientForm() {
+  const oldClientId = $("clientType").value === "old" ? $("clientExistingSelect")?.value : "";
+  const oldClient = oldClientId ? state.clients.find((client) => client.id === oldClientId) : null;
   return {
-    id: selectedClientId || uid("client"),
-    name: $("clientName").value.trim(),
+    id: oldClient?.id || selectedClientId || uid("client"),
+    name: oldClient ? oldClient.name : $("clientName").value.trim(),
     type: $("clientType").value,
     startDate: $("clientStart").value,
     target: Number($("clientTarget").value || 10),
@@ -2254,6 +2390,7 @@ function collectNoteForm() {
     angle: $("noteAngle").value.trim(),
     copywriting: $("noteCopywriting").value.trim(),
     reviewNote: $("noteReviewNote").value.trim(),
+    link: normalizeExternalUrl($("noteLink").value.trim()),
   };
   if (!note.tags.length) note.tags = normalizeTags(inferTags(note));
   return note;
@@ -2808,6 +2945,16 @@ $("clientProgress").addEventListener("change", (event) => {
 });
 
 $("clientProgress").addEventListener("click", (event) => {
+  const remarkButton = event.target.closest("[data-progress-remark-edit]");
+  if (remarkButton) {
+    const text = document.querySelector(`[data-progress-remark-text="${remarkButton.dataset.progressRemarkEdit}"]`);
+    if (!text) return;
+    text.contentEditable = "true";
+    text.classList.add("editing");
+    text.focus();
+    document.execCommand?.("selectAll", false, null);
+    return;
+  }
   const button = event.target.closest("[data-progress-reset]");
   const plannedButton = event.target.closest("[data-planned-reset]");
   if (!button && !plannedButton) return;
@@ -2817,6 +2964,31 @@ $("clientProgress").addEventListener("click", (event) => {
   saveState();
   renderDashboard();
   showToast(button ? "已恢复自动统计" : "已恢复本月已排自动统计");
+});
+
+$("clientProgress").addEventListener("focusout", (event) => {
+  const text = event.target.closest("[data-progress-remark-text]");
+  if (!text || text.contentEditable !== "true") return;
+  const month = currentPlanMonth();
+  const clientId = text.dataset.progressRemarkText;
+  state.progressRemarks[month] = state.progressRemarks[month] || {};
+  const value = text.textContent.trim();
+  if (value) state.progressRemarks[month][clientId] = value;
+  else delete state.progressRemarks[month][clientId];
+  text.contentEditable = "false";
+  text.classList.remove("editing");
+  saveState();
+  renderDashboard();
+  showToast("客户进度备注已保存");
+});
+
+$("clientProgress").addEventListener("keydown", (event) => {
+  const text = event.target.closest("[data-progress-remark-text]");
+  if (!text || text.contentEditable !== "true") return;
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    text.blur();
+  }
 });
 
 ["dayPlanList", "todayPlanPreview"].forEach((id) => {
@@ -3086,6 +3258,7 @@ $("noteForm").addEventListener("submit", (event) => {
   upsert(state.notes, note);
   saveState();
   selectedNoteId = note.id;
+  closeNoteModal();
   render();
   showToast("笔记已保存");
 });
@@ -3110,7 +3283,7 @@ $("clientList").addEventListener("click", (event) => {
     const note = state.notes.find((entry) => entry.id === noteCard.dataset.noteId);
     if (note) {
       goView("notes");
-      fillNoteForm(note);
+      openNoteModal(note);
       showToast("已打开笔记编辑");
     }
     return;
@@ -3131,6 +3304,12 @@ $("clientList").addEventListener("change", (event) => {
 });
 
 $("clientDetailContent").addEventListener("click", (event) => {
+  const editClient = event.target.closest("[data-detail-edit-client]");
+  if (editClient) {
+    const client = clientById(editClient.dataset.detailEditClient);
+    if (client) openClientModal(client);
+    return;
+  }
   const jump = event.target.closest("[data-detail-jump]");
   if (jump) {
     const target = document.getElementById(jump.dataset.detailJump);
@@ -3184,6 +3363,12 @@ $("clientDetailContent").addEventListener("change", async (event) => {
 });
 
 $("planBoard").addEventListener("click", (event) => {
+  const openButton = event.target.closest("[data-open-note-modal]");
+  if (openButton) {
+    const note = state.notes.find((entry) => entry.id === openButton.dataset.openNoteModal);
+    if (note) openNoteModal(note);
+    return;
+  }
   if (event.target.closest("input, textarea, select, button, label")) return;
   const tagButton = event.target.closest("[data-tag]");
   if (tagButton) {
@@ -3196,7 +3381,7 @@ $("planBoard").addEventListener("click", (event) => {
   const note = state.notes.find((entry) => entry.id === card.dataset.noteId);
   if (note) {
     goView("notes");
-    fillNoteForm(note);
+    openNoteModal(note);
     showToast("已打开笔记编辑");
   }
 });
@@ -3257,7 +3442,7 @@ $("noteList").addEventListener("click", (event) => {
   const card = event.target.closest("[data-note-id]");
   if (!card) return;
   const note = state.notes.find((entry) => entry.id === card.dataset.noteId);
-  if (note) fillNoteForm(note);
+  if (note) openNoteModal(note);
 });
 
 $("noteList").addEventListener("change", (event) => {
@@ -3287,6 +3472,23 @@ $("noteProgressOverview").addEventListener("click", (event) => {
   showToast(`已切换筛选：${pill.textContent.trim().replace(/\s+/g, " ")}`);
 });
 
+$("nextNotePreviewList").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-next-note-edit]");
+  const card = event.target.closest("[data-next-note-id]");
+  const noteId = button?.dataset.nextNoteEdit || card?.dataset.nextNoteId;
+  if (!noteId) return;
+  const note = state.notes.find((entry) => entry.id === noteId);
+  if (note) openNoteModal(note);
+});
+
+document.addEventListener("click", (event) => {
+  const editFirst = event.target.closest("[data-next-note-edit-first]");
+  if (!editFirst) return;
+  const next = state.notes.filter((note) => note.status !== "published").sort(sortNotesForWork)[0];
+  if (next) openNoteModal(next);
+  else showToast("暂无可编辑的下期笔记");
+});
+
 $("typeHistoryList").addEventListener("click", (event) => {
   if (event.target.closest("input, textarea, select, button, label")) return;
   const tagButton = event.target.closest("[data-tag]");
@@ -3298,7 +3500,7 @@ $("typeHistoryList").addEventListener("click", (event) => {
   const card = event.target.closest("[data-note-id]");
   if (!card) return;
   const note = state.notes.find((entry) => entry.id === card.dataset.noteId);
-  if (note) fillNoteForm(note);
+  if (note) openNoteModal(note);
 });
 
 $("typeHistoryList").addEventListener("change", (event) => {
@@ -3310,10 +3512,30 @@ $("typeHistoryList").addEventListener("change", (event) => {
 $("resetClientForm").addEventListener("click", () => openClientModal());
 $("closeClientModal").addEventListener("click", closeClientModal);
 $("cancelClientEdit").addEventListener("click", closeClientModal);
+$("clientType").addEventListener("change", () => {
+  updateClientNameMode();
+  if ($("clientType").value === "old") {
+    populateExistingClientOptions($("clientExistingSelect")?.value || state.clients[0]?.id || "");
+    const client = state.clients.find((entry) => entry.id === $("clientExistingSelect")?.value);
+    if (client) fillClientForm({ ...client, type: "old" });
+  } else {
+    fillClientForm();
+    $("clientType").value = "new";
+    updateClientNameMode();
+  }
+});
+$("clientExistingSelect").addEventListener("change", () => {
+  const client = state.clients.find((entry) => entry.id === $("clientExistingSelect").value);
+  if (client) fillClientForm({ ...client, type: "old" });
+});
 $("clientModal").addEventListener("click", (event) => {
   if (event.target.id === "clientModal") closeClientModal();
 });
-$("resetNoteForm").addEventListener("click", () => fillNoteForm());
+$("resetNoteForm").addEventListener("click", () => openNoteModal());
+$("closeNoteModal").addEventListener("click", closeNoteModal);
+$("noteModal").addEventListener("click", (event) => {
+  if (event.target.id === "noteModal") closeNoteModal();
+});
 $("noteDate").addEventListener("change", () => {
   if (!$("notePlanMonth").value) $("notePlanMonth").value = planMonthFromDate($("noteDate").value);
 });
@@ -3345,12 +3567,29 @@ $("deleteNote").addEventListener("click", () => {
   selectedNoteId = "";
   saveState();
   fillNoteForm();
+  closeNoteModal();
   render();
   showToast("笔记已删除");
 });
 
 $("planClientFilter").addEventListener("change", renderPlans);
 $("planMonthFilter").addEventListener("change", renderPlans);
+$("addPlanNote").addEventListener("click", () => {
+  const clientId = $("planClientFilter").value !== "all" ? $("planClientFilter").value : state.clients[0]?.id || "";
+  const month = $("planMonthFilter").value || currentPlanMonth();
+  openNoteModal({
+    clientId,
+    title: "",
+    type: "图文",
+    publishDate: `${month}-01`,
+    planMonth: month,
+    planKind: "monthly",
+    status: "idea",
+    needDesign: "yes",
+    imageOwner: "design",
+    tags: [],
+  });
+});
 document.getElementById("designClientFilter")?.addEventListener("change", renderDesignRequests);
 document.getElementById("designMonthFilter")?.addEventListener("change", renderDesignRequests);
 $("typeTagFilter").addEventListener("change", renderTypes);
@@ -3446,6 +3685,7 @@ $("brandForm").addEventListener("submit", (event) => {
   upsert(state.brandRefs, brand);
   saveState();
   fillBrandForm(brand);
+  closeBrandModal();
   renderBrands();
   showToast("品牌参考已保存");
 });
@@ -3455,14 +3695,28 @@ $("brandList").addEventListener("click", (event) => {
   const card = event.target.closest("[data-brand-id]");
   if (card) {
     const brand = state.brandRefs.find((entry) => entry.id === card.dataset.brandId);
-    if (brand) fillBrandForm(brand);
+    if (brand) openBrandModal(brand);
     return;
   }
 });
 
-$("resetBrandForm").addEventListener("click", () => fillBrandForm());
+$("localBrandList").addEventListener("click", (event) => {
+  if (event.target.closest("a")) return;
+  const card = event.target.closest("[data-brand-id]");
+  if (card) {
+    const brand = state.brandRefs.find((entry) => entry.id === card.dataset.brandId);
+    if (brand) openBrandModal(brand);
+  }
+});
+
+$("resetBrandForm").addEventListener("click", () => openBrandModal());
+$("closeBrandModal").addEventListener("click", closeBrandModal);
+$("brandModal").addEventListener("click", (event) => {
+  if (event.target.id === "brandModal") closeBrandModal();
+});
 
 $("brandSearch").addEventListener("input", renderBrands);
+$("brandCategoryTags").addEventListener("input", renderBrandCategoryPreview);
 
 $("deleteBrand").addEventListener("click", () => {
   const id = $("brandId").value;
@@ -3470,6 +3724,7 @@ $("deleteBrand").addEventListener("click", () => {
   state.brandRefs = state.brandRefs.filter((entry) => entry.id !== id);
   saveState();
   fillBrandForm();
+  closeBrandModal();
   renderBrands();
   showToast("品牌参考已删除");
 });
@@ -3481,6 +3736,7 @@ $("toolForm").addEventListener("submit", (event) => {
   upsert(state.toolRefs, tool);
   saveState();
   fillToolForm(tool);
+  closeToolModal();
   renderTools();
   showToast("工具已保存");
 });
@@ -3492,10 +3748,24 @@ $("toolList").addEventListener("click", (event) => {
   const id = button?.dataset.editTool || card?.dataset.toolId;
   if (!id) return;
   const tool = state.toolRefs.find((entry) => entry.id === id);
-  if (tool) fillToolForm(tool);
+  if (tool) openToolModal(tool);
 });
 
-$("resetToolForm").addEventListener("click", () => fillToolForm());
+$("privateToolList").addEventListener("click", (event) => {
+  if (event.target.closest("a")) return;
+  const button = event.target.closest("[data-edit-tool]");
+  const card = event.target.closest("[data-tool-id]");
+  const id = button?.dataset.editTool || card?.dataset.toolId;
+  if (!id) return;
+  const tool = state.toolRefs.find((entry) => entry.id === id);
+  if (tool) openToolModal(tool);
+});
+
+$("resetToolForm").addEventListener("click", () => openToolModal());
+$("closeToolModal").addEventListener("click", closeToolModal);
+$("toolModal").addEventListener("click", (event) => {
+  if (event.target.id === "toolModal") closeToolModal();
+});
 
 $("deleteTool").addEventListener("click", () => {
   const id = $("toolId").value;
@@ -3503,6 +3773,7 @@ $("deleteTool").addEventListener("click", () => {
   state.toolRefs = state.toolRefs.filter((entry) => entry.id !== id);
   saveState();
   fillToolForm();
+  closeToolModal();
   renderTools();
   showToast("工具已删除");
 });
@@ -3540,6 +3811,31 @@ $("globalPlanningImport").addEventListener("change", async (event) => {
   await handleGlobalPlanningImport(file);
   event.target.value = "";
 });
+
+$("confirmImportPreview").addEventListener("click", () => {
+  if (!pendingImportPreview) return;
+  try {
+    const edited = JSON.parse($("importPreviewText").value || "{}");
+    const parsed = {
+      positioning: edited?.归属板块?.客户基础资料?.账号定位 || pendingImportPreview.parsed.positioning || "",
+      notes: Array.isArray(edited?.归属板块?.月度规划) ? edited.归属板块.月度规划 : pendingImportPreview.parsed.notes,
+    };
+    $("importPreviewModal").hidden = true;
+    applyParsedPlanningImport(pendingImportPreview.clientId, parsed, pendingImportPreview.fileName);
+    pendingImportPreview = null;
+  } catch (error) {
+    alert("预览内容不是合法 JSON，请检查逗号、引号和括号后再确认导入。");
+  }
+});
+
+["cancelImportPreview", "closeImportPreview"].forEach((id) => {
+  $(id).addEventListener("click", () => {
+    pendingImportPreview = null;
+    $("importPreviewModal").hidden = true;
+    showToast("已放弃本次导入");
+  });
+});
+
 $("copyMonthlyReport").addEventListener("click", () => copyText($("monthlyReportPreview").textContent));
 
 document.querySelectorAll(".report-tab").forEach((button) => {
@@ -3683,6 +3979,7 @@ $("clearAll").addEventListener("click", () => {
   state.reportTemplates = {};
   state.progressOverrides = {};
   state.plannedOverrides = {};
+  state.progressRemarks = {};
   state.dashboardMetricOverrides = {};
   state.mailTemplate = defaultMailTemplate();
   saveState();
