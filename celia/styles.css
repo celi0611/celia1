@@ -923,6 +923,22 @@ h1 {
   color: var(--red);
 }
 
+.client-progress-jump {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.client-progress-jump:hover span:first-child {
+  color: var(--red);
+}
+
 .clickable-pill {
   cursor: pointer;
   transition: transform 0.16s ease, border-color 0.16s ease;
@@ -1821,7 +1837,7 @@ textarea:focus {
 }
 
 .plan-image {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 3;
   max-height: 260px;
   object-fit: cover;
 }
@@ -2143,14 +2159,14 @@ textarea:focus {
 
 .image-preview img {
   width: 100%;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 3;
   max-height: 220px;
   object-fit: cover;
 }
 
 .note-thumb {
   width: 100%;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 3;
   max-height: 220px;
   object-fit: cover;
   border: 1px solid var(--line);
@@ -2165,6 +2181,11 @@ textarea:focus {
 .note-item.published {
   border-color: #ecc0d1;
   background: #fff0f5;
+}
+
+.note-item.paused {
+  border-color: #b7dbc3;
+  background: #eefaf2;
 }
 
 .note-status-stack {
@@ -2395,7 +2416,7 @@ textarea:focus {
 
 .client-design-section .image-preview,
 .client-design-section .note-thumb {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 3;
   width: 100%;
   max-height: none;
   object-fit: cover;

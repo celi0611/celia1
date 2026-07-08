@@ -52,7 +52,6 @@
         </div>
       </nav>
       <div class="sidebar-foot">
-        <img class="sidebar-rabbit" src="./assets/rabbit-sidebar-cutout.png" alt="粉红兔子插图" />
         <button id="exportJson" class="ghost-btn">导出数据</button>
         <label class="ghost-btn file-btn">
           导入数据
@@ -78,7 +77,7 @@
             <h3>客户进度</h3>
             <div class="panel-actions">
               <span>月中前尽量完成 5 篇</span>
-              <button id="toggleProgressEdit" class="ghost-btn mini-action" type="button">编辑</button>
+              <button id="toggleProgressEdit" class="ghost-btn mini-action" type="button" hidden>编辑</button>
             </div>
           </div>
           <div id="clientProgress" class="progress-list"></div>
@@ -238,10 +237,7 @@
         <section id="dayCalendarSection" class="panel">
           <div class="panel-title">
             <h3>日历大盘</h3>
-            <label class="ghost-btn mini-action file-btn">
-              上传文档
-              <input id="dayCalendarImport" type="file" accept=".txt,.md,.csv" />
-            </label>
+            <button id="openDayCalendarImport" class="ghost-btn mini-action pencil-btn" type="button" title="粘贴导入日程" aria-label="粘贴导入日程">✎</button>
           </div>
           <div class="toolbar calendar-toolbar">
             <select id="dayCalendarMonth"></select>
@@ -471,7 +467,6 @@
           <section class="panel next-note-panel">
             <div class="panel-title">
               <h3>下期笔记预览</h3>
-              <button class="ghost-btn mini-action preview-edit-icon" type="button" data-next-note-edit-first title="编辑下期笔记" aria-label="编辑下期笔记">✎</button>
             </div>
             <div id="nextNotePreviewList" class="next-note-list"></div>
           </section>
@@ -850,6 +845,46 @@
       </section>
     </div>
 
+    <div id="progressEditModal" class="modal-backdrop" hidden>
+      <section class="modal-card form-panel">
+        <div class="panel-title">
+          <h3 id="progressEditTitle">客户进度编辑</h3>
+          <button id="closeProgressEdit" class="ghost-btn mini-action" type="button">取消</button>
+        </div>
+        <input id="progressEditClientId" type="hidden" />
+        <div class="form-row">
+          <label>
+            手动已发
+            <input id="progressEditPublished" type="number" min="0" max="99" />
+          </label>
+          <label>
+            本月已排
+            <input id="progressEditPlanned" type="number" min="0" max="99" />
+          </label>
+        </div>
+        <div class="form-actions">
+          <button id="saveProgressEdit" class="primary-btn" type="button">保存</button>
+          <button id="resetProgressEdit" class="ghost-btn" type="button">恢复自动</button>
+          <button id="resetPlannedEdit" class="ghost-btn" type="button">恢复已排</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="dayCalendarImportModal" class="modal-backdrop" hidden>
+      <section class="modal-card form-panel">
+        <div class="panel-title">
+          <h3>粘贴导入日程</h3>
+          <button id="closeDayCalendarImport" class="ghost-btn mini-action" type="button">取消</button>
+        </div>
+        <p class="helper-text">可粘贴：7月8日 阿明小菜 图文；系统会保存为“阿明-图文”。</p>
+        <textarea id="dayCalendarImportText" class="mail-template-editor" rows="10" placeholder="7月8日 阿明小菜 图文&#10;7月9日 雅居小馆 视频"></textarea>
+        <div class="form-actions">
+          <button id="confirmDayCalendarImport" class="primary-btn" type="button">解析导入</button>
+          <button id="cancelDayCalendarImport" class="ghost-btn" type="button">放弃</button>
+        </div>
+      </section>
+    </div>
+
     <div id="importPreviewModal" class="modal-backdrop" hidden>
       <section class="modal-card form-panel">
         <div class="panel-title">
@@ -956,6 +991,7 @@
             <input id="noteImage" type="file" accept="image/*" />
           </label>
           <div id="noteImagePreview" class="image-preview empty">暂无参考图片</div>
+          <button id="deleteNoteImage" class="danger-btn mini-action" type="button">删除图片</button>
           <label>
             审核备注
             <textarea id="noteReviewNote" rows="2" placeholder="客户反馈、是否可到点先发"></textarea>

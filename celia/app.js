@@ -779,7 +779,11 @@ function sortTasks(tasks) {
 }
 
 function sortNotesForWork(a, b) {
-  const statusRank = (note) => (note.status === "published" ? 2 : 1);
+  const statusRank = (note) => {
+    if (note.status === "published") return 3;
+    if (note.status === "paused") return 2;
+    return 1;
+  };
   return statusRank(a) - statusRank(b) || (a.publishDate || "").localeCompare(b.publishDate || "");
 }
 
@@ -1043,21 +1047,9 @@ function progressHtml(client) {
   return `
     <article class="progress-item">
       <div class="item-head">
-        <strong>${escapeHtml(client.name)}</strong>
+        <strong>${escapeHtml(client.name)} <button class="ghost-btn mini-action pencil-btn" type="button" data-progress-modal="${client.id}" title="编辑客户进度" aria-label="编辑客户进度">✎</button></strong>
         <span class="tag ${published >= 5 ? "green" : "yellow"}">已发 ${published}/${target}</span>
       </div>
-      ${progressEditMode ? `
-        <div class="progress-edit-row">
-          <label>手动已发
-            <input type="number" min="0" max="99" data-progress-client="${client.id}" value="${published}" />
-          </label>
-          <label>本月已排
-            <input type="number" min="0" max="99" data-planned-client="${client.id}" value="${planned}" />
-          </label>
-          <button class="ghost-btn mini-action" type="button" data-progress-reset="${client.id}">恢复自动 ${actualPublished}</button>
-          <button class="ghost-btn mini-action" type="button" data-planned-reset="${client.id}">恢复已排 ${actualPlanned}</button>
-        </div>
-      ` : ""}
       <div class="bar green-bar"><span style="width:${percent}%"></span></div>
       <div class="progress-remark-row ${remark ? "" : "empty"}">
         <p data-progress-remark-text="${client.id}" contenteditable="false">${escapeHtml(remark)}</p>
@@ -1065,6 +1057,36 @@ function progressHtml(client) {
       </div>
     </article>
   `;
+}
+
+function openProgressEditModal(clientId) {
+  const client = clientById(clientId);
+  if (!client) return;
+  $("progressEditClientId").value = clientId;
+  $("progressEditTitle").textContent = `${client.name}进度编辑`;
+  $("progressEditPublished").value = publishedThisMonth(clientId);
+  $("progressEditPlanned").value = plannedThisMonth(clientId);
+  $("progressEditModal").hidden = false;
+}
+
+function closeProgressEditModal() {
+  $("progressEditModal").hidden = true;
+}
+
+function saveProgressEditModal() {
+  const clientId = $("progressEditClientId").value;
+  const published = requireNonNegativeInteger($("progressEditPublished").value);
+  const planned = requireNonNegativeInteger($("progressEditPlanned").value);
+  if (!clientId || published === null || planned === null) return;
+  const month = currentPlanMonth();
+  state.progressOverrides[month] = state.progressOverrides[month] || {};
+  state.plannedOverrides[month] = state.plannedOverrides[month] || {};
+  state.progressOverrides[month][clientId] = published;
+  state.plannedOverrides[month][clientId] = planned;
+  saveState();
+  closeProgressEditModal();
+  renderDashboard();
+  showToast("客户进度已保存");
 }
 
 function monthSummary(clientId, month) {
@@ -1461,7 +1483,7 @@ function renderNextNotePreview() {
     .filter((client) => client.status !== "paused")
     .map((client) => {
       const next = notesForClient(client.id)
-        .filter((note) => note.status !== "published")
+        .filter((note) => note.status !== "published" && note.status !== "paused")
         .sort(sortNotesForWork)[0];
       return `
         <article class="next-note-item" ${next ? `data-next-note-id="${next.id}"` : ""}>
@@ -1500,11 +1522,13 @@ function noteProgressOverviewHtml(baseNotes, visibleNotes, monthFilter) {
       const percent = Math.min(100, Math.round((done / rows.length) * 100));
       return `
         <article class="progress-pill client-progress-pill">
+          <button class="client-progress-jump" type="button" data-plan-client-jump="${client.id}" title="查看${escapeHtml(client.name)}月度规划">
           <div class="item-head">
             <span>${escapeHtml(client.name)}</span>
             <strong>${done}/${rows.length}</strong>
           </div>
           <div class="bar"><span style="width:${percent}%"></span></div>
+          </button>
         </article>
       `;
     })
@@ -1513,7 +1537,6 @@ function noteProgressOverviewHtml(baseNotes, visibleNotes, monthFilter) {
   return `
     <article class="progress-pill clickable-pill" data-note-filter="all"><span>${label}</span><strong>${total}</strong></article>
     <article class="progress-pill clickable-pill" data-note-filter="published"><span>已发布</span><strong>${published}</strong></article>
-    <article class="progress-pill clickable-pill" data-note-filter="unpublished"><span>未发布</span><strong>${remaining}</strong></article>
     ${clientCards}
   `;
 }
@@ -1521,7 +1544,7 @@ function noteProgressOverviewHtml(baseNotes, visibleNotes, monthFilter) {
 function noteHtml(note) {
   const client = clientById(note.clientId);
   return `
-    <article class="note-item ${note.status === "published" ? "published" : ""}" data-note-id="${note.id}">
+    <article class="note-item ${note.status === "published" ? "published" : ""} ${note.status === "paused" ? "paused" : ""}" data-note-id="${note.id}">
       ${note.status === "published" ? `<span class="published-check note-published-check">✓</span>` : ""}
       <div class="item-head">
         <strong>${escapeHtml(note.title)}</strong>
@@ -2437,10 +2460,14 @@ function parseCalendarTasksFromText(text) {
       const day = Number(match[3]);
       const textValue = match[4].trim();
       if (!month || !day || !textValue) return null;
+      const matchedClient = state.clients.find((client) => textValue.includes(client.name));
+      const clientPrefix = (matchedClient?.name || textValue).replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, "").slice(0, 2) || "任务";
+      const typeMatch = textValue.match(/(图文|视频|探店|周报|月报|文案|提需|笔记)/);
+      const taskTitle = `${clientPrefix}-${typeMatch?.[1] || "笔记"}`;
       return {
         id: uid("calendar_task"),
         date: `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
-        text: textValue,
+        text: taskTitle,
         done: false,
         createdAt: new Date().toISOString(),
       };
@@ -2539,6 +2566,7 @@ function fillNoteForm(note = null) {
   $("noteLink").value = note?.link || "";
   $("noteImage").value = "";
   setImagePreview("noteImagePreview", note?.image || "", "暂无参考图片");
+  $("deleteNoteImage").hidden = !note;
 }
 
 function openNoteModal(note = null) {
@@ -2669,8 +2697,8 @@ function readImageFile(file) {
     reader.onload = () => {
       const image = new Image();
       image.onload = () => {
-        const targetW = 900;
-        const targetH = 1200;
+        const targetW = 1200;
+        const targetH = 900;
         const canvas = document.createElement("canvas");
         canvas.width = targetW;
         canvas.height = targetH;
@@ -3208,6 +3236,11 @@ $("clientProgress").addEventListener("change", (event) => {
 });
 
 $("clientProgress").addEventListener("click", (event) => {
+  const progressModal = event.target.closest("[data-progress-modal]");
+  if (progressModal) {
+    openProgressEditModal(progressModal.dataset.progressModal);
+    return;
+  }
   const remarkButton = event.target.closest("[data-progress-remark-edit]");
   if (remarkButton) {
     const text = document.querySelector(`[data-progress-remark-text="${remarkButton.dataset.progressRemarkEdit}"]`);
@@ -3227,6 +3260,30 @@ $("clientProgress").addEventListener("click", (event) => {
   saveState();
   renderDashboard();
   showToast(button ? "已恢复自动统计" : "已恢复本月已排自动统计");
+});
+
+$("closeProgressEdit").addEventListener("click", closeProgressEditModal);
+$("progressEditModal").addEventListener("click", (event) => {
+  if (event.target.id === "progressEditModal") closeProgressEditModal();
+});
+$("saveProgressEdit").addEventListener("click", saveProgressEditModal);
+$("resetProgressEdit").addEventListener("click", () => {
+  const clientId = $("progressEditClientId").value;
+  const month = currentPlanMonth();
+  if (state.progressOverrides[month]) delete state.progressOverrides[month][clientId];
+  $("progressEditPublished").value = actualPublishedThisMonth(clientId);
+  saveState();
+  renderDashboard();
+  showToast("已恢复自动已发");
+});
+$("resetPlannedEdit").addEventListener("click", () => {
+  const clientId = $("progressEditClientId").value;
+  const month = currentPlanMonth();
+  if (state.plannedOverrides[month]) delete state.plannedOverrides[month][clientId];
+  $("progressEditPlanned").value = actualPlannedThisMonth(clientId);
+  saveState();
+  renderDashboard();
+  showToast("已恢复已排");
 });
 
 $("clientProgress").addEventListener("focusout", (event) => {
@@ -3478,7 +3535,11 @@ function updateNoteStatus(noteId, status) {
   if (status === "backup") note.planKind = "backup";
   else if ((note.planKind || "monthly") === "backup") note.planKind = "monthly";
   saveState();
-  render();
+  renderDashboard();
+  renderPlans();
+  renderNotes();
+  renderTypes();
+  renderClientDetail();
   showToast("笔记状态已更新");
   return true;
 }
@@ -3753,6 +3814,14 @@ $("noteList").addEventListener("change", (event) => {
 });
 
 $("noteProgressOverview").addEventListener("click", (event) => {
+  const planJump = event.target.closest("[data-plan-client-jump]");
+  if (planJump) {
+    $("planClientFilter").value = planJump.dataset.planClientJump;
+    $("planMonthFilter").value = $("noteFilterMonth").value !== "all" ? $("noteFilterMonth").value : currentPlanMonth();
+    renderPlans();
+    goView("plans");
+    return;
+  }
   const pill = event.target.closest("[data-note-filter]");
   if (!pill) return;
   const value = pill.dataset.noteFilter;
@@ -3780,14 +3849,6 @@ $("nextNotePreviewList").addEventListener("click", (event) => {
   if (!noteId) return;
   const note = state.notes.find((entry) => entry.id === noteId);
   if (note) openNoteModal(note);
-});
-
-document.addEventListener("click", (event) => {
-  const editFirst = event.target.closest("[data-next-note-edit-first]");
-  if (!editFirst) return;
-  const next = state.notes.filter((note) => note.status !== "published").sort(sortNotesForWork)[0];
-  if (next) openNoteModal(next);
-  else showToast("暂无可编辑的下期笔记");
 });
 
 $("typeHistoryList").addEventListener("click", (event) => {
@@ -3845,6 +3906,23 @@ $("noteImage").addEventListener("change", async (event) => {
   if (!file) return;
   const image = await readImageFile(file);
   setImagePreview("noteImagePreview", image, "暂无参考图片");
+});
+
+$("deleteNoteImage").addEventListener("click", () => {
+  $("noteImage").value = "";
+  setImagePreview("noteImagePreview", "", "暂无参考图片");
+  showToast("图片已删除");
+});
+
+$("noteModal").addEventListener("paste", async (event) => {
+  const file = [...(event.clipboardData?.items || [])]
+    .find((item) => item.type.startsWith("image/"))
+    ?.getAsFile();
+  if (!file) return;
+  event.preventDefault();
+  const image = await readImageFile(file);
+  setImagePreview("noteImagePreview", image, "暂无参考图片");
+  showToast("已粘贴图片");
 });
 
 $("deleteClient").addEventListener("click", () => {
@@ -4001,24 +4079,28 @@ $("dayCalendarTaskForm").addEventListener("submit", (event) => {
   showToast("日历任务已添加");
 });
 
-$("dayCalendarImport").addEventListener("change", (event) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const tasks = parseCalendarTasksFromText(reader.result);
-    if (!tasks.length) {
-      showToast("未识别到日期任务，请使用 7月8日 任务内容 的格式");
-      event.target.value = "";
-      return;
-    }
-    state.calendarTasks.push(...tasks);
-    saveState();
-    renderDayMonthBoard();
-    event.target.value = "";
-    showToast(`已导入 ${tasks.length} 条日历任务`);
-  };
-  reader.readAsText(file);
+$("openDayCalendarImport").addEventListener("click", () => {
+  $("dayCalendarImportText").value = "";
+  $("dayCalendarImportModal").hidden = false;
+  window.setTimeout(() => $("dayCalendarImportText")?.focus(), 80);
+});
+$("closeDayCalendarImport").addEventListener("click", () => {
+  $("dayCalendarImportModal").hidden = true;
+});
+$("cancelDayCalendarImport").addEventListener("click", () => {
+  $("dayCalendarImportModal").hidden = true;
+});
+$("dayCalendarImportModal").addEventListener("click", (event) => {
+  if (event.target.id === "dayCalendarImportModal") $("dayCalendarImportModal").hidden = true;
+});
+$("confirmDayCalendarImport").addEventListener("click", () => {
+  const tasks = parseCalendarTasksFromText($("dayCalendarImportText").value);
+  if (!tasks.length) return showToast("未识别到日期任务，请使用 7月8日 客户名称 图文 的格式");
+  state.calendarTasks.push(...tasks);
+  saveState();
+  renderDayMonthBoard();
+  $("dayCalendarImportModal").hidden = true;
+  showToast(`已导入 ${tasks.length} 条日历任务`);
 });
 
 $("dayCalendarDayTaskList").addEventListener("click", (event) => {
