@@ -26,6 +26,7 @@
           <div class="nav-group-items">
             <button class="nav-btn" data-view="notes" data-icon="排" title="笔记排期"><span class="nav-icon nav-rabbit-icon"><img src="./assets/nav-notes-rabbit.png" alt="" /></span><span class="nav-text">排期</span></button>
             <button class="nav-btn" data-view="types" data-icon="型" title="笔记类型"><span class="nav-icon">型</span><span class="nav-text">类型</span></button>
+            <button class="nav-btn" data-view="hotNotes" data-icon="热" title="热点笔记"><span class="nav-icon">热</span><span class="nav-text">热点</span></button>
             <button class="nav-btn" data-view="brands" data-icon="参" title="品牌参考"><span class="nav-icon nav-rabbit-icon"><img src="./assets/nav-brand-rabbit.png" alt="" /></span><span class="nav-text">品牌参考</span></button>
           </div>
         </section>
@@ -237,7 +238,10 @@
         <section id="dayCalendarSection" class="panel">
           <div class="panel-title">
             <h3>日历大盘</h3>
-            <span>点击日期新增/编辑当日任务</span>
+            <label class="ghost-btn mini-action file-btn">
+              上传文档
+              <input id="dayCalendarImport" type="file" accept=".txt,.md,.csv" />
+            </label>
           </div>
           <div class="toolbar calendar-toolbar">
             <select id="dayCalendarMonth"></select>
@@ -450,11 +454,12 @@
                   <option value="confirm">待确定</option>
                   <option value="idea">待选题</option>
                   <option value="design">待设计/提需</option>
-                  <option value="copy">待文案</option>
+                  <option value="copy">待方案</option>
                   <option value="production">待制作</option>
                   <option value="review">待客户审核</option>
                   <option value="scheduled">待发布</option>
                   <option value="paused">暂搁置</option>
+                  <option value="backup">备选方案</option>
                 </select>
                 <select id="noteFilterTag"></select>
                 <button id="createMonthPlan" class="ghost-btn">生成本月 10 篇</button>
@@ -487,6 +492,20 @@
         </div>
         <section class="panel">
           <div id="typeHistoryList" class="note-list"></div>
+        </section>
+      </section>
+
+      <section id="hotNotes" class="view">
+        <div class="topbar">
+          <button class="ghost-btn back-btn" type="button">返回上一层</button>
+          <div>
+            <h2>热点笔记</h2>
+            <p>收集对标爆款链接，沉淀互动数据和高频评论关键词。</p>
+          </div>
+          <button id="resetHotNoteForm" class="ghost-btn mini-action pencil-btn" type="button" title="新增热点笔记" aria-label="新增热点笔记">✎</button>
+        </div>
+        <section class="panel">
+          <div id="hotNoteList" class="hot-note-list"></div>
         </section>
       </section>
 
@@ -533,10 +552,9 @@
         <div class="tools-layout">
           <section class="panel">
             <div class="panel-title">
-              <h3>外链工具</h3>
+              <h3>外链工具 <button id="resetToolForm" class="ghost-btn mini-action pencil-btn" type="button" title="新增工具" aria-label="新增工具">✎</button></h3>
               <div class="panel-actions">
                 <span id="toolCount">0 个</span>
-                <button id="resetToolForm" class="ghost-btn mini-action" type="button">新增工具</button>
               </div>
             </div>
             <div id="toolList" class="tool-list"></div>
@@ -774,6 +792,64 @@
       </form>
     </div>
 
+    <div id="hotNoteModal" class="modal-backdrop" hidden>
+      <form id="hotNoteForm" class="modal-card form-panel">
+        <div class="panel-title">
+          <h3>热点笔记信息</h3>
+          <button id="closeHotNoteModal" class="ghost-btn mini-action" type="button">取消</button>
+        </div>
+        <input type="hidden" id="hotNoteId" />
+        <label>
+          小红书链接
+          <input id="hotNoteUrl" placeholder="粘贴小红书笔记链接" required />
+        </label>
+        <div class="form-row">
+          <label>
+            博主昵称
+            <input id="hotNoteAuthor" placeholder="可自动识别后手动修正" />
+          </label>
+          <label>
+            点赞量
+            <input id="hotNoteLikes" type="number" min="0" value="0" />
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            收藏量
+            <input id="hotNoteCollects" type="number" min="0" value="0" />
+          </label>
+          <label>
+            评论量
+            <input id="hotNoteComments" type="number" min="0" value="0" />
+          </label>
+        </div>
+        <label>
+          评论高频关键词
+          <input id="hotNoteKeywords" placeholder="例如：排队、性价比、拍照、套餐" />
+        </label>
+        <div class="form-actions">
+          <button id="fetchHotNote" class="ghost-btn" type="button">识别链接</button>
+          <button class="primary-btn" type="submit">保存热点笔记</button>
+          <button id="deleteHotNote" class="danger-btn" type="button">删除</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="imageCropModal" class="modal-backdrop" hidden>
+      <section class="modal-card form-panel">
+        <div class="panel-title">
+          <h3>图片裁剪确认</h3>
+          <button id="cancelImageCrop" class="ghost-btn mini-action" type="button">取消</button>
+        </div>
+        <p class="helper-text">图片将按 3:4 比例居中裁剪后上传。</p>
+        <div id="imageCropPreview" class="image-preview empty">暂无图片</div>
+        <div class="form-actions">
+          <button id="confirmImageCrop" class="primary-btn" type="button">确认裁剪上传</button>
+          <button id="closeImageCrop" class="ghost-btn" type="button">放弃</button>
+        </div>
+      </section>
+    </div>
+
     <div id="importPreviewModal" class="modal-backdrop" hidden>
       <section class="modal-card form-panel">
         <div class="panel-title">
@@ -839,12 +915,13 @@
                 <option value="confirm">待确定</option>
                 <option value="idea">待选题</option>
                 <option value="design">待设计</option>
-                <option value="copy">待文案</option>
+                <option value="copy">待方案</option>
                 <option value="production">待制作</option>
                 <option value="review">待客户审核</option>
                 <option value="scheduled">待发布</option>
                 <option value="published">已发布</option>
                 <option value="paused">暂搁置</option>
+                <option value="backup">备选方案</option>
               </select>
             </label>
             <label>

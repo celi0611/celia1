@@ -2,7 +2,7 @@ const STORAGE_KEY = "xhs-ledger-v2";
 const UI_STORAGE_KEY = "xhs-ledger-ui-v1";
 const API_BASE = "";
 
-let state = { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], toolRefs: [], reportTemplates: {}, progressOverrides: {}, plannedOverrides: {}, progressRemarks: {}, dashboardMetricOverrides: {}, mailTemplate: "" };
+let state = { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], toolRefs: [], hotNotes: [], reportTemplates: {}, progressOverrides: {}, plannedOverrides: {}, progressRemarks: {}, dashboardMetricOverrides: {}, mailTemplate: "" };
 let backendOnline = false;
 let backendMode = "local";
 let selectedClientId = "";
@@ -14,6 +14,7 @@ let selectedDayPlanDate = "";
 let selectedWeekPlanWeek = "";
 let draggingDayPlanId = "";
 let draggingWeekPlanId = "";
+let draggingToolId = "";
 let previousView = "dashboard";
 let draggingTaskId = "";
 let editingDetailNoteId = "";
@@ -21,6 +22,8 @@ let lastClientImport = null;
 let progressEditMode = false;
 let editingTaskId = "";
 let pendingImportPreview = null;
+let editingClientDetailId = "";
+let pendingCropUpload = null;
 let uiState = { sidebarCollapsed: false, navGroups: { content: true, client: true, report: true } };
 
 const $ = (id) => document.getElementById(id);
@@ -29,12 +32,13 @@ const NOTE_STATUS_OPTIONS = [
   ["confirm", "待确定"],
   ["idea", "待选题"],
   ["design", "待设计"],
-  ["copy", "待文案"],
+  ["copy", "待方案"],
   ["production", "待制作"],
   ["review", "待客户审核"],
   ["scheduled", "待发布"],
   ["published", "已发布"],
   ["paused", "暂搁置"],
+  ["backup", "备选方案"],
 ];
 const today = startOfDay(new Date());
 selectedCalendarDate = dateValue(today);
@@ -43,7 +47,7 @@ selectedDayPlanDate = dateValue(today);
 selectedWeekPlanWeek = weekKey(today);
 
 function emptyState() {
-  return { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], toolRefs: [], reportTemplates: {}, progressOverrides: {}, plannedOverrides: {}, progressRemarks: {}, dashboardMetricOverrides: {}, mailTemplate: defaultMailTemplate() };
+  return { clients: [], notes: [], calendars: [], calendarTasks: [], taskActions: {}, taskOverrides: {}, customTasks: [], dayPlans: [], weekPlans: [], brandRefs: [], toolRefs: [], hotNotes: [], reportTemplates: {}, progressOverrides: {}, plannedOverrides: {}, progressRemarks: {}, dashboardMetricOverrides: {}, mailTemplate: defaultMailTemplate() };
 }
 
 function bootstrapState() {
@@ -98,6 +102,7 @@ function preferNonEmptyData(primary, fallback) {
       weekPlans: normalizedPrimary.weekPlans.length ? normalizedPrimary.weekPlans : normalizedFallback.weekPlans,
       brandRefs: normalizedPrimary.brandRefs.length ? normalizedPrimary.brandRefs : normalizedFallback.brandRefs,
       toolRefs: normalizedPrimary.toolRefs.length ? normalizedPrimary.toolRefs : normalizedFallback.toolRefs,
+      hotNotes: normalizedPrimary.hotNotes.length ? normalizedPrimary.hotNotes : normalizedFallback.hotNotes,
       calendarTasks: normalizedPrimary.calendarTasks.length ? normalizedPrimary.calendarTasks : normalizedFallback.calendarTasks,
       taskActions: Object.keys(normalizedPrimary.taskActions).length ? normalizedPrimary.taskActions : normalizedFallback.taskActions,
       taskOverrides: Object.keys(normalizedPrimary.taskOverrides).length ? normalizedPrimary.taskOverrides : normalizedFallback.taskOverrides,
@@ -129,6 +134,7 @@ function loadLocalState() {
       weekPlans: Array.isArray(parsed.weekPlans) ? parsed.weekPlans : [],
       brandRefs: Array.isArray(parsed.brandRefs) ? parsed.brandRefs.map(normalizeBrand) : [],
       toolRefs: Array.isArray(parsed.toolRefs) ? parsed.toolRefs.map(normalizeTool) : [],
+      hotNotes: Array.isArray(parsed.hotNotes) ? parsed.hotNotes.map(normalizeHotNote) : [],
       reportTemplates: parsed.reportTemplates && typeof parsed.reportTemplates === "object" ? parsed.reportTemplates : {},
       progressOverrides: parsed.progressOverrides && typeof parsed.progressOverrides === "object" ? parsed.progressOverrides : {},
       plannedOverrides: parsed.plannedOverrides && typeof parsed.plannedOverrides === "object" ? parsed.plannedOverrides : {},
@@ -150,6 +156,7 @@ async function loadState() {
     if (!Object.prototype.hasOwnProperty.call(data, "weekPlans")) data.weekPlans = local.weekPlans;
     if (!Object.prototype.hasOwnProperty.call(data, "brandRefs")) data.brandRefs = local.brandRefs;
     if (!Object.prototype.hasOwnProperty.call(data, "toolRefs")) data.toolRefs = local.toolRefs;
+    if (!Object.prototype.hasOwnProperty.call(data, "hotNotes")) data.hotNotes = local.hotNotes;
     if (!Object.prototype.hasOwnProperty.call(data, "progressOverrides")) data.progressOverrides = local.progressOverrides;
     if (!Object.prototype.hasOwnProperty.call(data, "progressRemarks")) data.progressRemarks = local.progressRemarks;
     if (!Object.prototype.hasOwnProperty.call(data, "mailTemplate")) data.mailTemplate = local.mailTemplate;
@@ -167,6 +174,7 @@ async function loadState() {
         if (!Object.prototype.hasOwnProperty.call(staticData, "weekPlans")) staticData.weekPlans = local.weekPlans;
         if (!Object.prototype.hasOwnProperty.call(staticData, "brandRefs")) staticData.brandRefs = local.brandRefs;
         if (!Object.prototype.hasOwnProperty.call(staticData, "toolRefs")) staticData.toolRefs = local.toolRefs;
+        if (!Object.prototype.hasOwnProperty.call(staticData, "hotNotes")) staticData.hotNotes = local.hotNotes;
         if (!Object.prototype.hasOwnProperty.call(staticData, "progressOverrides")) staticData.progressOverrides = local.progressOverrides;
         if (!Object.prototype.hasOwnProperty.call(staticData, "progressRemarks")) staticData.progressRemarks = local.progressRemarks;
         if (!Object.prototype.hasOwnProperty.call(staticData, "mailTemplate")) staticData.mailTemplate = local.mailTemplate;
@@ -228,6 +236,7 @@ function normalizeState(data) {
     weekPlans: Array.isArray(data?.weekPlans) ? data.weekPlans.map(normalizeWeekPlan) : [],
     brandRefs: Array.isArray(data?.brandRefs) ? data.brandRefs.map(normalizeBrand) : [],
     toolRefs: Array.isArray(data?.toolRefs) ? data.toolRefs.map(normalizeTool) : [],
+    hotNotes: Array.isArray(data?.hotNotes) ? data.hotNotes.map(normalizeHotNote) : [],
     reportTemplates: data?.reportTemplates && typeof data.reportTemplates === "object" ? data.reportTemplates : {},
     progressOverrides: data?.progressOverrides && typeof data.progressOverrides === "object" ? data.progressOverrides : {},
     plannedOverrides: data?.plannedOverrides && typeof data.plannedOverrides === "object" ? data.plannedOverrides : {},
@@ -244,6 +253,7 @@ function normalizeClient(client) {
     attention: client.attention || "",
     profileUrl: client.profileUrl || "",
     bio: client.bio || "",
+    notesImage: client.notesImage || "",
   };
 }
 
@@ -277,7 +287,22 @@ function normalizeTool(tool) {
     title: tool.title || tool.name || "",
     url: tool.url || "",
     category: tool.category || "external",
+    sortOrder: Number.isFinite(Number(tool.sortOrder)) ? Number(tool.sortOrder) : 0,
     updatedAt: tool.updatedAt || "",
+  };
+}
+
+function normalizeHotNote(note) {
+  return {
+    id: note.id || uid("hot"),
+    url: normalizeExternalUrl(note.url || ""),
+    author: note.author || "",
+    likes: Math.max(0, Number(note.likes || 0)),
+    collects: Math.max(0, Number(note.collects || 0)),
+    comments: Math.max(0, Number(note.comments || 0)),
+    keywords: normalizeTags(note.keywords || []),
+    createdAt: note.createdAt || new Date().toISOString(),
+    updatedAt: note.updatedAt || new Date().toISOString(),
   };
 }
 
@@ -762,11 +787,15 @@ function statusText(value) {
   const map = {
     idea: "待选题",
     design: "待设计",
-    copy: "待文案",
+    copy: "待方案",
     production: "待制作",
     review: "待客户审核",
     scheduled: "待发布",
     published: "已发布",
+    communicate: "待沟通",
+    confirm: "待确定",
+    paused: "暂搁置",
+    backup: "备选方案",
   };
   return map[value] || value;
 }
@@ -796,6 +825,7 @@ function render() {
   renderPlans();
   renderNotes();
   renderTypes();
+  renderHotNotes();
   renderBrands();
   renderTools();
   renderReport();
@@ -1095,6 +1125,7 @@ function clientHtml(client) {
 
 function renderClientDetail(clientId = selectedClientId) {
   if (!$("clientDetailContent")) return;
+  editingDetailNoteId = "";
   const client = clientById(clientId) || state.clients[0];
   if (!client) {
     $("clientDetailContent").innerHTML = emptyHtml("暂无客户资料。");
@@ -1105,32 +1136,14 @@ function renderClientDetail(clientId = selectedClientId) {
     .filter((note) => (note.planMonth || planMonthFromDate(note.publishDate)) === month)
     .sort(sortNotesForWork);
   const publishedNotes = notes.filter((note) => note.status === "published");
+  const clientBody = editingClientDetailId === client.id ? clientDetailEditHtml(client) : clientDetailViewHtml(client);
   $("clientDetailContent").innerHTML = `
     <div class="detail-jump-cards">
       <button type="button" data-detail-jump="detailPlanSection">笔记规划</button>
       <button type="button" data-detail-jump="detailDesignSection">设计提需</button>
       <button type="button" data-detail-jump="detailPublishedSection">已发布笔记</button>
     </div>
-    <div class="form-actions detail-actions">
-      <button class="primary-btn" type="button" data-detail-edit-client="${client.id}">编辑</button>
-    </div>
-    <div class="detail-grid">
-      <article>
-        <h3>${escapeHtml(client.name)}</h3>
-        <div class="tag-row">
-          <span class="tag">${typeText(client.type)}</span>
-          <span class="tag">${formatDate(client.startDate)}接手</span>
-          <span class="tag">${client.contractMonths ? `签约${client.contractMonths}个月` : "签约时长未填"}</span>
-          <span class="tag">${publisherText(client.publisher)}</span>
-          <span class="tag">${reviewText(client.reviewMode)}</span>
-        </div>
-      </article>
-      <article><strong>主页链接</strong><p class="text-ellipsis" title="${escapeHtml(client.profileUrl || "")}">${client.profileUrl ? `<a href="${escapeHtml(normalizeExternalUrl(client.profileUrl))}" target="_blank" rel="noopener noreferrer">${escapeHtml(client.profileUrl)}</a>` : "未填写"}</p></article>
-      <article><strong>账号简介</strong><p>${client.bio ? escapeHtml(client.bio) : "未填写"}</p></article>
-      <article><strong>发布偏好</strong><p>${client.publishDays ? escapeHtml(client.publishDays) : "未填写"}</p></article>
-      <article><strong>客户注意点</strong><p>${client.attention ? escapeHtml(client.attention) : "未填写"}</p></article>
-      <article><strong>资料备注</strong><p>${client.notes ? escapeHtml(client.notes) : "未填写"}</p></article>
-    </div>
+    ${clientBody}
     <section id="detailPlanSection" class="plan-section">
       <div class="section-head">
         <h4>${monthLabel(month)}笔记规划 <span class="tag">${notes.length} 篇</span></h4>
@@ -1144,6 +1157,60 @@ function renderClientDetail(clientId = selectedClientId) {
       </div>
       <div class="mini-note-list">${publishedNotes.length ? publishedNotes.map(miniNoteHtml).join("") : emptyHtml("暂无已发布笔记。")}</div>
     </section>
+  `;
+}
+
+function clientDetailViewHtml(client) {
+  return `
+    <div class="detail-grid">
+      <article>
+        <div class="detail-title-row">
+          <h3>${escapeHtml(client.name)}</h3>
+          <button class="ghost-btn mini-action pencil-btn" type="button" data-detail-inline-edit="${client.id}" title="编辑客户资料" aria-label="编辑客户资料">✎</button>
+        </div>
+        <div class="tag-row">
+          <span class="tag">${typeText(client.type)}</span>
+          <span class="tag">${formatDate(client.startDate)}接手</span>
+          <span class="tag">${client.contractMonths ? `签约${client.contractMonths}个月` : "签约时长未填"}</span>
+          <span class="tag">${publisherText(client.publisher)}</span>
+          <span class="tag">${reviewText(client.reviewMode)}</span>
+        </div>
+      </article>
+      <article><strong>主页链接</strong><p class="text-ellipsis" title="${escapeHtml(client.profileUrl || "")}">${client.profileUrl ? `<a href="${escapeHtml(normalizeExternalUrl(client.profileUrl))}" target="_blank" rel="noopener noreferrer">${escapeHtml(client.profileUrl)}</a>` : "未填写"}</p></article>
+      <article><strong>账号简介</strong><p>${client.bio ? escapeHtml(client.bio) : "未填写"}</p></article>
+      <article><strong>发布偏好</strong><p>${client.publishDays ? escapeHtml(client.publishDays) : "未填写"}</p></article>
+      <article><strong>客户注意点</strong><p>${client.attention ? escapeHtml(client.attention) : "未填写"}</p></article>
+      <article><strong>资料备注</strong><p>${client.notes ? escapeHtml(client.notes) : "未填写"}</p>${client.notesImage ? `<img class="note-thumb plan-image" src="${escapeHtml(client.notesImage)}" alt="资料备注图片" />` : ""}</article>
+    </div>
+  `;
+}
+
+function clientDetailEditHtml(client) {
+  return `
+    <div class="detail-grid detail-edit-grid" data-client-detail-edit="${client.id}">
+      <article>
+        <div class="detail-title-row">
+          <h3>编辑客户基础资料</h3>
+          <div class="task-actions">
+            <button class="primary-btn mini-action" type="button" data-detail-save-client="${client.id}">保存</button>
+            <button class="ghost-btn mini-action" type="button" data-detail-cancel-client>取消</button>
+          </div>
+        </div>
+        <label>客户名称<input data-client-detail-field="name" value="${escapeHtml(client.name || "")}" /></label>
+      </article>
+      <article><label>主页链接<input data-client-detail-field="profileUrl" value="${escapeHtml(client.profileUrl || "")}" /></label></article>
+      <article><label>账号简介<textarea data-client-detail-field="bio" rows="4">${escapeHtml(client.bio || "")}</textarea></label></article>
+      <article><label>发布偏好<textarea data-client-detail-field="publishDays" rows="3">${escapeHtml(client.publishDays || "")}</textarea></label></article>
+      <article><label>客户注意点<textarea data-client-detail-field="attention" rows="4">${escapeHtml(client.attention || "")}</textarea></label></article>
+      <article>
+        <label>资料备注<textarea data-client-detail-field="notes" rows="4">${escapeHtml(client.notes || "")}</textarea></label>
+        ${client.notesImage ? `<img class="note-thumb plan-image" src="${escapeHtml(client.notesImage)}" alt="资料备注图片" />` : `<div class="image-preview empty">暂无资料备注图片</div>`}
+        <label class="ghost-btn file-btn mini-action">
+          插入/替换图片
+          <input data-client-notes-image="${client.id}" type="file" accept="image/*" />
+        </label>
+      </article>
+    </div>
   `;
 }
 
@@ -1338,10 +1405,7 @@ function miniNoteHtml(note) {
         <strong>${escapeHtml(note.title)}</strong>
         <div class="task-actions">
           ${statusSelectHtml(note)}
-          <select class="mini-note-menu" data-detail-note-menu="${note.id}">
-            <option value="">操作</option>
-            <option value="edit">编辑</option>
-          </select>
+          <button class="ghost-btn mini-action pencil-btn" type="button" data-detail-note-edit="${note.id}" title="编辑笔记" aria-label="编辑笔记">✎</button>
         </div>
       </div>
       <div class="mini-note-grid">
@@ -1514,6 +1578,79 @@ function renderTypes() {
   $("typeHistoryList").innerHTML = rows.length ? rows.map(noteHtml).join("") : emptyHtml("当前标签下还没有已发布笔记。");
 }
 
+function renderHotNotes() {
+  if (!$("hotNoteList")) return;
+  const rows = state.hotNotes.slice().sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+  $("hotNoteList").innerHTML = rows.length ? rows.map(hotNoteHtml).join("") : emptyHtml("还没有热点笔记。");
+}
+
+function hotNoteHtml(note) {
+  return `
+    <article class="hot-note-item" data-hot-note-id="${note.id}">
+      <div>
+        <strong>${escapeHtml(note.author || "未填写博主")}</strong>
+        <a href="${escapeHtml(note.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(shortUrl(note.url))}</a>
+      </div>
+      <div class="hot-note-metrics">
+        <span>赞 ${note.likes}</span>
+        <span>藏 ${note.collects}</span>
+        <span>评 ${note.comments}</span>
+      </div>
+      <div class="tag-row">${tagButtonsHtml(note.keywords)}</div>
+      <button class="ghost-btn mini-action pencil-btn" type="button" data-edit-hot-note="${note.id}" title="编辑热点笔记" aria-label="编辑热点笔记">✎</button>
+    </article>
+  `;
+}
+
+function fillHotNoteForm(note = null) {
+  $("hotNoteId").value = note?.id || "";
+  $("hotNoteUrl").value = note?.url || "";
+  $("hotNoteAuthor").value = note?.author || "";
+  $("hotNoteLikes").value = note?.likes || 0;
+  $("hotNoteCollects").value = note?.collects || 0;
+  $("hotNoteComments").value = note?.comments || 0;
+  $("hotNoteKeywords").value = normalizeTags(note?.keywords || []).join("、");
+}
+
+function openHotNoteModal(note = null) {
+  fillHotNoteForm(note);
+  $("hotNoteModal").hidden = false;
+  window.setTimeout(() => $("hotNoteUrl")?.focus(), 80);
+}
+
+function closeHotNoteModal() {
+  $("hotNoteModal").hidden = true;
+}
+
+function collectHotNoteForm() {
+  const now = new Date().toISOString();
+  const old = state.hotNotes.find((entry) => entry.id === $("hotNoteId").value);
+  return normalizeHotNote({
+    id: $("hotNoteId").value || uid("hot"),
+    url: $("hotNoteUrl").value.trim(),
+    author: $("hotNoteAuthor").value.trim(),
+    likes: $("hotNoteLikes").value,
+    collects: $("hotNoteCollects").value,
+    comments: $("hotNoteComments").value,
+    keywords: $("hotNoteKeywords").value,
+    createdAt: old?.createdAt || now,
+    updatedAt: now,
+  });
+}
+
+function inferHotNoteFromUrl() {
+  try {
+    const url = $("hotNoteUrl").value.trim();
+    if (!url) return showToast("请先粘贴小红书链接");
+    $("hotNoteUrl").value = normalizeExternalUrl(url);
+    if (!$("hotNoteAuthor").value.trim()) $("hotNoteAuthor").value = "待补充博主";
+    if (!$("hotNoteKeywords").value.trim()) $("hotNoteKeywords").value = "小红书、热点参考";
+    showToast("已识别链接，可继续补充互动数据");
+  } catch {
+    showToast("链接识别失败，请手动填写数据");
+  }
+}
+
 function renderBrands() {
   if (!$("brandList")) return;
   const keyword = ($("brandSearch")?.value || "").trim().toLowerCase();
@@ -1530,8 +1667,9 @@ function renderBrands() {
 
 function renderTools() {
   if (!$("toolList")) return;
-  const external = state.toolRefs.filter((tool) => (tool.category || "external") !== "private");
-  const privateTools = state.toolRefs.filter((tool) => (tool.category || "external") === "private");
+  const byOrder = (a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0) || (a.updatedAt || "").localeCompare(b.updatedAt || "");
+  const external = state.toolRefs.filter((tool) => (tool.category || "external") !== "private").sort(byOrder);
+  const privateTools = state.toolRefs.filter((tool) => (tool.category || "external") === "private").sort(byOrder);
   $("toolCount").textContent = `${external.length} 个`;
   $("toolList").innerHTML = external.length
     ? external.map(toolHtml).join("")
@@ -1542,11 +1680,12 @@ function renderTools() {
 
 function toolHtml(tool) {
   return `
-    <article class="tool-item" data-tool-id="${tool.id}">
+    <article class="tool-item" data-tool-id="${tool.id}" draggable="true">
       <div>
         <strong>${escapeHtml(tool.title)}</strong>
         <a href="${escapeHtml(tool.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(tool.url)}">${escapeHtml(shortUrl(tool.url))}</a>
       </div>
+      <span class="drag-handle" title="拖拽排序">⋮⋮</span>
       <button class="ghost-btn mini-action" type="button" data-edit-tool="${tool.id}">编辑</button>
     </article>
   `;
@@ -1575,8 +1714,44 @@ function collectToolForm() {
     title: $("toolTitle").value.trim(),
     url: normalizeExternalUrl($("toolUrl").value.trim()),
     category: $("toolCategory").value || "external",
+    sortOrder: state.toolRefs.find((entry) => entry.id === $("toolId").value)?.sortOrder ?? state.toolRefs.length,
     updatedAt: new Date().toISOString(),
   };
+}
+
+function bindToolDrag(listId, category) {
+  const list = $(listId);
+  if (!list) return;
+  list.addEventListener("dragstart", (event) => {
+    const card = event.target.closest("[data-tool-id]");
+    if (!card) return;
+    draggingToolId = card.dataset.toolId;
+    card.classList.add("dragging");
+  });
+  list.addEventListener("dragend", () => {
+    draggingToolId = "";
+    renderTools();
+  });
+  list.addEventListener("dragover", (event) => {
+    if (!draggingToolId) return;
+    event.preventDefault();
+    const over = event.target.closest("[data-tool-id]");
+    if (!over || over.dataset.toolId === draggingToolId) return;
+    const dragging = state.toolRefs.find((tool) => tool.id === draggingToolId);
+    const target = state.toolRefs.find((tool) => tool.id === over.dataset.toolId);
+    if (!dragging || !target) return;
+    if ((dragging.category || "external") !== category || (target.category || "external") !== category) return;
+    const listRows = state.toolRefs.filter((tool) => (tool.category || "external") === category).sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0));
+    const from = listRows.findIndex((tool) => tool.id === dragging.id);
+    const to = listRows.findIndex((tool) => tool.id === target.id);
+    if (from < 0 || to < 0) return;
+    listRows.splice(to, 0, listRows.splice(from, 1)[0]);
+    listRows.forEach((tool, index) => {
+      tool.sortOrder = index;
+    });
+    saveState();
+    renderTools();
+  });
 }
 
 function normalizeExternalUrl(url) {
@@ -2248,6 +2423,31 @@ function renderDayCalendarDayEditor() {
     : emptyHtml("这一天还没有任务。");
 }
 
+function parseCalendarTasksFromText(text) {
+  const currentYear = today.getFullYear();
+  return String(text || "")
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const match = line.match(/(?:(20\d{2})[-/.年])?\s*(\d{1,2})[-/.月]\s*(\d{1,2})日?\s*[：:，,\-\s]*(.+)/);
+      if (!match) return null;
+      const year = Number(match[1] || currentYear);
+      const month = Number(match[2]);
+      const day = Number(match[3]);
+      const textValue = match[4].trim();
+      if (!month || !day || !textValue) return null;
+      return {
+        id: uid("calendar_task"),
+        date: `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+        text: textValue,
+        done: false,
+        createdAt: new Date().toISOString(),
+      };
+    })
+    .filter(Boolean);
+}
+
 function numberLines(text) {
   const lines = text
     .split("\n")
@@ -2392,6 +2592,8 @@ function collectNoteForm() {
     reviewNote: $("noteReviewNote").value.trim(),
     link: normalizeExternalUrl($("noteLink").value.trim()),
   };
+  if (note.status === "backup") note.planKind = "backup";
+  else if (note.planKind === "backup") note.planKind = "monthly";
   if (!note.tags.length) note.tags = normalizeTags(inferTags(note));
   return note;
 }
@@ -2444,10 +2646,54 @@ function setImagePreview(id, image, emptyText) {
   box.innerHTML = image ? `<img src="${escapeHtml(image)}" alt="图片预览" />` : escapeHtml(emptyText);
 }
 
+function openImageCropModal(file, onConfirm) {
+  if (!file) return;
+  pendingCropUpload = { file, onConfirm };
+  const reader = new FileReader();
+  reader.onload = () => {
+    setImagePreview("imageCropPreview", reader.result, "暂无图片");
+    $("imageCropModal").hidden = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function closeImageCropModal() {
+  pendingCropUpload = null;
+  $("imageCropModal").hidden = true;
+  setImagePreview("imageCropPreview", "", "暂无图片");
+}
+
 function readImageFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const targetW = 900;
+        const targetH = 1200;
+        const canvas = document.createElement("canvas");
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext("2d");
+        const sourceRatio = image.width / image.height;
+        const targetRatio = targetW / targetH;
+        let sw = image.width;
+        let sh = image.height;
+        let sx = 0;
+        let sy = 0;
+        if (sourceRatio > targetRatio) {
+          sw = image.height * targetRatio;
+          sx = (image.width - sw) / 2;
+        } else {
+          sh = image.width / targetRatio;
+          sy = (image.height - sh) / 2;
+        }
+        ctx.drawImage(image, sx, sy, sw, sh, 0, 0, targetW, targetH);
+        resolve(canvas.toDataURL("image/jpeg", 0.86));
+      };
+      image.onerror = () => resolve(reader.result);
+      image.src = reader.result;
+    };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -2464,6 +2710,23 @@ function updateNoteField(noteId, field, value) {
   renderNotes();
   renderTypes();
   showToast("已保存");
+  return true;
+}
+
+function saveClientDetailInline(clientId) {
+  const client = clientById(clientId);
+  const wrap = document.querySelector(`[data-client-detail-edit="${clientId}"]`);
+  if (!client || !wrap) return false;
+  wrap.querySelectorAll("[data-client-detail-field]").forEach((field) => {
+    const key = field.dataset.clientDetailField;
+    client[key] = field.value.trim();
+  });
+  saveState();
+  editingClientDetailId = "";
+  render();
+  selectedClientId = clientId;
+  goView("clientDetail");
+  showToast("客户资料已保存");
   return true;
 }
 
@@ -3212,6 +3475,8 @@ function updateNoteStatus(noteId, status) {
   const note = state.notes.find((entry) => entry.id === noteId);
   if (!note) return false;
   note.status = status;
+  if (status === "backup") note.planKind = "backup";
+  else if ((note.planKind || "monthly") === "backup") note.planKind = "monthly";
   saveState();
   render();
   showToast("笔记状态已更新");
@@ -3306,8 +3571,27 @@ $("clientList").addEventListener("change", (event) => {
 $("clientDetailContent").addEventListener("click", (event) => {
   const editClient = event.target.closest("[data-detail-edit-client]");
   if (editClient) {
-    const client = clientById(editClient.dataset.detailEditClient);
-    if (client) openClientModal(client);
+    editingClientDetailId = editClient.dataset.detailEditClient;
+    renderClientDetail(editingClientDetailId);
+    showToast("已进入客户资料编辑");
+    return;
+  }
+  const inlineEdit = event.target.closest("[data-detail-inline-edit]");
+  if (inlineEdit) {
+    editingClientDetailId = inlineEdit.dataset.detailInlineEdit;
+    renderClientDetail(editingClientDetailId);
+    showToast("已进入客户资料编辑");
+    return;
+  }
+  const cancelClient = event.target.closest("[data-detail-cancel-client]");
+  if (cancelClient) {
+    editingClientDetailId = "";
+    renderClientDetail();
+    return;
+  }
+  const saveClient = event.target.closest("[data-detail-save-client]");
+  if (saveClient) {
+    saveClientDetailInline(saveClient.dataset.detailSaveClient);
     return;
   }
   const jump = event.target.closest("[data-detail-jump]");
@@ -3318,6 +3602,12 @@ $("clientDetailContent").addEventListener("click", (event) => {
       target.classList.add("flash-card");
       window.setTimeout(() => target.classList.remove("flash-card"), 1400);
     }
+    return;
+  }
+  const editNote = event.target.closest("[data-detail-note-edit]");
+  if (editNote) {
+    const note = state.notes.find((entry) => entry.id === editNote.dataset.detailNoteEdit);
+    if (note) openNoteModal(note);
     return;
   }
   const delImage = event.target.closest("[data-detail-image-delete]");
@@ -3336,11 +3626,7 @@ $("clientDetailContent").addEventListener("click", (event) => {
 $("clientDetailContent").addEventListener("change", async (event) => {
   const menu = event.target.closest("[data-detail-note-menu]");
   if (menu) {
-    if (menu.value === "edit") {
-      editingDetailNoteId = menu.dataset.detailNoteMenu;
-      renderClientDetail();
-      showToast("已打开本条笔记编辑");
-    }
+    menu.value = "";
     return;
   }
   const statusSelect = event.target.closest("[data-status-note]");
@@ -3359,6 +3645,21 @@ $("clientDetailContent").addEventListener("change", async (event) => {
     if (!file) return;
     const image = await readImageFile(file);
     updateNoteField(imageInput.dataset.detailImageNote, "image", image);
+  }
+  const clientImageInput = event.target.closest("[data-client-notes-image]");
+  if (clientImageInput) {
+    const file = clientImageInput.files?.[0];
+    if (!file) return;
+    const clientId = clientImageInput.dataset.clientNotesImage;
+    openImageCropModal(file, async (cropped) => {
+      const client = clientById(clientId);
+      if (!client) return;
+      client.notesImage = cropped;
+      saveState();
+      renderClientDetail(clientId);
+      showToast("资料备注图片已上传");
+    });
+    clientImageInput.value = "";
   }
 });
 
@@ -3595,6 +3896,58 @@ document.getElementById("designMonthFilter")?.addEventListener("change", renderD
 $("typeTagFilter").addEventListener("change", renderTypes);
 $("typeClientFilter").addEventListener("change", renderTypes);
 $("typeHistoryList").addEventListener("change", handleNoteLinkChange);
+$("resetHotNoteForm").addEventListener("click", () => openHotNoteModal());
+$("closeHotNoteModal").addEventListener("click", closeHotNoteModal);
+$("hotNoteModal").addEventListener("click", (event) => {
+  if (event.target.id === "hotNoteModal") closeHotNoteModal();
+});
+$("fetchHotNote").addEventListener("click", inferHotNoteFromUrl);
+$("hotNoteUrl").addEventListener("paste", () => window.setTimeout(inferHotNoteFromUrl, 80));
+$("hotNoteUrl").addEventListener("change", inferHotNoteFromUrl);
+$("hotNoteForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  try {
+    const note = collectHotNoteForm();
+    if (!note.url) return showToast("请填写热点笔记链接");
+    upsert(state.hotNotes, note);
+    saveState();
+    closeHotNoteModal();
+    renderHotNotes();
+    showToast("热点笔记已保存");
+  } catch {
+    showToast("热点笔记保存失败，请检查链接或数据");
+  }
+});
+$("hotNoteList").addEventListener("click", (event) => {
+  if (event.target.closest("a")) return;
+  const button = event.target.closest("[data-edit-hot-note]");
+  const card = event.target.closest("[data-hot-note-id]");
+  const id = button?.dataset.editHotNote || card?.dataset.hotNoteId;
+  if (!id) return;
+  const note = state.hotNotes.find((entry) => entry.id === id);
+  if (note) openHotNoteModal(note);
+});
+$("deleteHotNote").addEventListener("click", () => {
+  const id = $("hotNoteId").value;
+  if (!id) return showToast("请选择热点笔记");
+  state.hotNotes = state.hotNotes.filter((entry) => entry.id !== id);
+  saveState();
+  closeHotNoteModal();
+  renderHotNotes();
+  showToast("热点笔记已删除");
+});
+$("cancelImageCrop").addEventListener("click", closeImageCropModal);
+$("closeImageCrop").addEventListener("click", closeImageCropModal);
+$("imageCropModal").addEventListener("click", (event) => {
+  if (event.target.id === "imageCropModal") closeImageCropModal();
+});
+$("confirmImageCrop").addEventListener("click", async () => {
+  if (!pendingCropUpload) return;
+  const { file, onConfirm } = pendingCropUpload;
+  const cropped = await readImageFile(file);
+  await onConfirm?.(cropped);
+  closeImageCropModal();
+});
 $("noteFilterClient").addEventListener("change", renderNotes);
 $("noteFilterMonth").addEventListener("change", renderNotes);
 $("noteFilterKind").addEventListener("change", renderNotes);
@@ -3646,6 +3999,26 @@ $("dayCalendarTaskForm").addEventListener("submit", (event) => {
   saveState();
   renderDayMonthBoard();
   showToast("日历任务已添加");
+});
+
+$("dayCalendarImport").addEventListener("change", (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const tasks = parseCalendarTasksFromText(reader.result);
+    if (!tasks.length) {
+      showToast("未识别到日期任务，请使用 7月8日 任务内容 的格式");
+      event.target.value = "";
+      return;
+    }
+    state.calendarTasks.push(...tasks);
+    saveState();
+    renderDayMonthBoard();
+    event.target.value = "";
+    showToast(`已导入 ${tasks.length} 条日历任务`);
+  };
+  reader.readAsText(file);
 });
 
 $("dayCalendarDayTaskList").addEventListener("click", (event) => {
@@ -3760,6 +4133,9 @@ $("privateToolList").addEventListener("click", (event) => {
   const tool = state.toolRefs.find((entry) => entry.id === id);
   if (tool) openToolModal(tool);
 });
+
+bindToolDrag("toolList", "external");
+bindToolDrag("privateToolList", "private");
 
 $("resetToolForm").addEventListener("click", () => openToolModal());
 $("closeToolModal").addEventListener("click", closeToolModal);
@@ -3976,6 +4352,7 @@ $("clearAll").addEventListener("click", () => {
   state.weekPlans = [];
   state.brandRefs = [];
   state.toolRefs = [];
+  state.hotNotes = [];
   state.reportTemplates = {};
   state.progressOverrides = {};
   state.plannedOverrides = {};

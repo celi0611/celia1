@@ -47,6 +47,7 @@ function normalizeLedger(input) {
     weekPlans: Array.isArray(input?.weekPlans) ? input.weekPlans : [],
     brandRefs: Array.isArray(input?.brandRefs) ? input.brandRefs : [],
     toolRefs: Array.isArray(input?.toolRefs) ? input.toolRefs : [],
+    hotNotes: Array.isArray(input?.hotNotes) ? input.hotNotes : [],
     reportTemplates: input?.reportTemplates && typeof input.reportTemplates === "object" ? input.reportTemplates : {},
     progressOverrides: input?.progressOverrides && typeof input.progressOverrides === "object" ? input.progressOverrides : {},
     plannedOverrides: input?.plannedOverrides && typeof input.plannedOverrides === "object" ? input.plannedOverrides : {},
