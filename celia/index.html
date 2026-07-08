@@ -1009,6 +1009,22 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="planActionModal" class="modal-backdrop" hidden>
+      <section class="modal-card form-panel">
+        <div class="panel-title">
+          <h3 id="planActionTitle">计划操作</h3>
+          <button id="closePlanAction" class="ghost-btn mini-action" type="button">取消</button>
+        </div>
+        <label>
+          计划内容
+          <textarea id="planActionText" rows="7" placeholder="填写完整计划内容"></textarea>
+        </label>
+        <div class="form-actions">
+          <button id="savePlanAction" class="primary-btn" type="button">保存编辑</button>
+          <button id="deletePlanAction" class="danger-btn" type="button">删除</button>
+        </div>
+      </section>
+    </div>
     <div id="taskEditModal" class="modal-backdrop" hidden>
       <form id="taskEditForm" class="modal-card form-panel">
         <div class="panel-title">

@@ -21,6 +21,7 @@ let editingDetailNoteId = "";
 let lastClientImport = null;
 let progressEditMode = false;
 let editingTaskId = "";
+let planActionTarget = null;
 let pendingImportPreview = null;
 let editingClientDetailId = "";
 let pendingCropUpload = null;
@@ -910,29 +911,25 @@ function renderWeekPlanWeekSelect() {
 }
 
 function dayPlanHtml(item, index = 0) {
-  const rows = textareaRows(item.text);
   return `
     <article class="day-plan-item ${item.done ? "done" : ""}" data-day-plan="${item.id}" draggable="true">
       <button class="check-square ${item.done ? "done" : ""}" data-day-plan-toggle="${item.id}" type="button" aria-label="完成"></button>
       <span class="day-plan-no">${index + 1}</span>
-      <textarea data-day-plan-text="${item.id}" rows="${rows}">${escapeHtml(item.text)}</textarea>
+      <p class="plan-text-full" data-day-plan-text="${item.id}">${escapeHtml(item.text || "")}</p>
       <span class="drag-handle" title="拖拽排序">⋮⋮</span>
-      <button class="ghost-btn mini-action" data-day-plan-edit="${item.id}" type="button">编辑</button>
-      <button class="danger-btn" data-day-plan-delete="${item.id}" type="button">删除</button>
+      <button class="ghost-btn mini-action pencil-action" data-day-plan-action="${item.id}" type="button" title="编辑/删除" aria-label="编辑或删除日计划">✎</button>
     </article>
   `;
 }
 
 function weekPlanHtml(item, index = 0) {
-  const rows = textareaRows(item.text);
   return `
     <article class="day-plan-item week-item ${item.done ? "done" : ""}" data-week-plan="${item.id}" draggable="true">
       <button class="check-square ${item.done ? "done" : ""}" data-week-plan-toggle="${item.id}" type="button" aria-label="完成"></button>
       <span class="day-plan-no">${index + 1}</span>
-      <textarea data-week-plan-text="${item.id}" rows="${rows}">${escapeHtml(item.text)}</textarea>
+      <p class="plan-text-full" data-week-plan-text="${item.id}">${escapeHtml(item.text || "")}</p>
       <span class="drag-handle" title="拖拽排序">⋮⋮</span>
-      <button class="ghost-btn mini-action" data-week-plan-edit="${item.id}" type="button">编辑</button>
-      <button class="danger-btn" data-week-plan-delete="${item.id}" type="button">删除</button>
+      <button class="ghost-btn mini-action pencil-action" data-week-plan-action="${item.id}" type="button" title="编辑/删除" aria-label="编辑或删除周计划">✎</button>
     </article>
   `;
 }
@@ -2258,10 +2255,13 @@ function reportClientCardHtml(client) {
   const month = currentPlanMonth();
   const notes = notesForClient(client.id).filter((note) => note.planMonth === month && note.planKind !== "backup");
   const published = notes.filter((note) => note.status === "published").length;
+  const target = notes.length || client.target || 10;
+  const percent = target ? Math.min(100, Math.round((published / target) * 100)) : 0;
   return `
     <article class="report-client-card" data-report-client="${client.id}">
       <strong>${escapeHtml(client.name)}</strong>
-      <span class="tag">${published}/${notes.length || client.target || 10} 已发布</span>
+      <span class="tag">${published}/${target} 已发布</span>
+      <div class="bar report-progress-bar"><span style="width:${percent}%"></span></div>
       <button class="ghost-btn" type="button" data-use-report-client="${client.id}">生成该客户周报</button>
     </article>
   `;
@@ -2415,10 +2415,10 @@ function renderCalendarDayEditor() {
     ? tasks
         .map(
           (task) => `
-          <article class="day-plan-item ${task.done ? "done" : ""}" data-calendar-task="${task.id}">
+          <article class="day-plan-item calendar-plan-item ${task.done ? "done" : ""}" data-calendar-task="${task.id}">
             <button class="check-square ${task.done ? "done" : ""}" type="button" data-calendar-task-toggle="${task.id}"></button>
-            <input data-calendar-task-text="${task.id}" value="${escapeHtml(task.text)}" />
-            <button class="danger-btn" type="button" data-calendar-task-delete="${task.id}">删除</button>
+            <p class="plan-text-full" data-calendar-task-text="${task.id}">${escapeHtml(task.text || "")}</p>
+            <button class="ghost-btn mini-action pencil-action" type="button" data-calendar-task-action="${task.id}" title="编辑/删除" aria-label="编辑或删除日历任务">✎</button>
           </article>
         `
         )
@@ -2435,10 +2435,10 @@ function renderDayCalendarDayEditor() {
     ? tasks
         .map(
           (task) => `
-          <article class="day-plan-item ${task.done ? "done" : ""}" data-calendar-task="${task.id}">
+          <article class="day-plan-item calendar-plan-item ${task.done ? "done" : ""}" data-calendar-task="${task.id}">
             <button class="check-square ${task.done ? "done" : ""}" type="button" data-calendar-task-toggle="${task.id}"></button>
-            <input data-calendar-task-text="${task.id}" value="${escapeHtml(task.text)}" />
-            <button class="danger-btn" type="button" data-calendar-task-delete="${task.id}">删除</button>
+            <p class="plan-text-full" data-calendar-task-text="${task.id}">${escapeHtml(task.text || "")}</p>
+            <button class="ghost-btn mini-action pencil-action" type="button" data-calendar-task-action="${task.id}" title="编辑/删除" aria-label="编辑或删除日历任务">✎</button>
           </article>
         `
         )
@@ -2788,7 +2788,59 @@ function upsertDayPlan(item) {
   showToast("日计划已保存");
 }
 
+function openPlanActionModal(type, id) {
+  const list = type === "calendar" ? state.calendarTasks : type === "week" ? state.weekPlans : state.dayPlans;
+  const item = list.find((entry) => entry.id === id);
+  if (!item) return;
+  planActionTarget = { type, id };
+  $("planActionTitle").textContent = type === "calendar" ? "日历任务操作" : type === "week" ? "周计划操作" : "今日清单操作";
+  $("planActionText").value = item.text || "";
+  $("planActionModal").hidden = false;
+  window.setTimeout(() => $("planActionText")?.focus(), 50);
+}
+
+function closePlanActionModal() {
+  planActionTarget = null;
+  $("planActionModal").hidden = true;
+}
+
+function savePlanActionModal() {
+  if (!planActionTarget) return;
+  const type = planActionTarget.type;
+  const list = type === "calendar" ? state.calendarTasks : type === "week" ? state.weekPlans : state.dayPlans;
+  const item = list.find((entry) => entry.id === planActionTarget.id);
+  if (!item) return;
+  item.text = $("planActionText").value.trim();
+  saveState();
+  if (type === "calendar") renderDayMonthBoard();
+  else renderDayPlans();
+  closePlanActionModal();
+  showToast(type === "calendar" ? "日历任务已保存" : type === "week" ? "周计划已保存" : "今日清单已保存");
+}
+
+function deletePlanActionModal() {
+  if (!planActionTarget) return;
+  const type = planActionTarget.type;
+  if (type === "calendar") {
+    state.calendarTasks = state.calendarTasks.filter((entry) => entry.id !== planActionTarget.id);
+  } else if (type === "week") {
+    state.weekPlans = state.weekPlans.filter((entry) => entry.id !== planActionTarget.id);
+  } else {
+    state.dayPlans = state.dayPlans.filter((entry) => entry.id !== planActionTarget.id);
+  }
+  saveState();
+  if (type === "calendar") renderDayMonthBoard();
+  else renderDayPlans();
+  closePlanActionModal();
+  showToast(type === "calendar" ? "日历任务已删除" : type === "week" ? "周计划已删除" : "今日清单已删除");
+}
+
 function handleDayPlanClick(event) {
+  const action = event.target.closest("[data-day-plan-action]");
+  if (action) {
+    openPlanActionModal("day", action.dataset.dayPlanAction);
+    return;
+  }
   const edit = event.target.closest("[data-day-plan-edit]");
   if (edit) {
     const input = document.querySelector(`[data-day-plan-text="${edit.dataset.dayPlanEdit}"]`);
@@ -3311,6 +3363,13 @@ $("clientProgress").addEventListener("keydown", (event) => {
   }
 });
 
+$("closePlanAction").addEventListener("click", closePlanActionModal);
+$("planActionModal").addEventListener("click", (event) => {
+  if (event.target.id === "planActionModal") closePlanActionModal();
+});
+$("savePlanAction").addEventListener("click", savePlanActionModal);
+$("deletePlanAction").addEventListener("click", deletePlanActionModal);
+
 ["dayPlanList", "todayPlanPreview"].forEach((id) => {
   $(id).addEventListener("click", handleDayPlanClick);
   $(id).addEventListener("change", handleDayPlanChange);
@@ -3367,6 +3426,11 @@ $("weekPlanList").addEventListener("change", (event) => {
 });
 
 $("weekPlanList").addEventListener("click", (event) => {
+  const action = event.target.closest("[data-week-plan-action]");
+  if (action) {
+    openPlanActionModal("week", action.dataset.weekPlanAction);
+    return;
+  }
   const edit = event.target.closest("[data-week-plan-edit]");
   if (edit) {
     const input = document.querySelector(`[data-week-plan-text="${edit.dataset.weekPlanEdit}"]`);
@@ -4104,6 +4168,11 @@ $("confirmDayCalendarImport").addEventListener("click", () => {
 });
 
 $("dayCalendarDayTaskList").addEventListener("click", (event) => {
+  const action = event.target.closest("[data-calendar-task-action]");
+  if (action) {
+    openPlanActionModal("calendar", action.dataset.calendarTaskAction);
+    return;
+  }
   const toggle = event.target.closest("[data-calendar-task-toggle]");
   if (toggle) {
     const task = state.calendarTasks.find((entry) => entry.id === toggle.dataset.calendarTaskToggle);
